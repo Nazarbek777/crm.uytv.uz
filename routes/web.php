@@ -10,6 +10,7 @@ use App\Http\Controllers\SaleController;
 use App\Http\Controllers\OperatorController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\ReminderController;
+use App\Http\Controllers\TaskController;
 
 Route::get('/', function () {
     return auth()->check() ? redirect()->route('dashboard') : redirect()->route('login');
@@ -39,4 +40,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('reminders', ReminderController::class)->except(['show']);
     Route::patch('/reminders/{reminder}/complete', [ReminderController::class, 'complete'])->name('reminders.complete');
     Route::patch('/reminders/{reminder}/uncomplete', [ReminderController::class, 'uncomplete'])->name('reminders.uncomplete');
+
+    Route::resource('tasks', TaskController::class)->except(['show']);
+    Route::patch('/tasks/{task}/status', [TaskController::class, 'setStatus'])->name('tasks.status');
 });

@@ -8,6 +8,7 @@ use App\Models\Sale;
 use App\Models\Client;
 use App\Models\Lead;
 use App\Models\Reminder;
+use App\Models\Task;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -58,6 +59,19 @@ class DashboardController extends Controller
                 ->where('remind_at', '<=', now()->endOfDay())
                 ->orderBy('remind_at')
                 ->limit(5)->get(),
+            'today_tasks' => Task::with(['lead', 'assigner'])
+                ->where('user_id', $user->id)
+                ->whereIn('status', ['pending', 'in_progress'])
+                ->where(function ($q) {
+                    $q->whereNull('due_date')->orWhereDate('due_date', '<=', today());
+                })
+                ->orderByRaw("CASE priority WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'normal' THEN 3 ELSE 4 END")
+                ->orderBy('due_date')
+                ->limit(5)->get(),
+            'today_calls' => Lead::where('operator_id', $user->id)
+                ->whereDate('next_follow_up', today())
+                ->whereNotIn('status', ['won', 'lost'])
+                ->count(),
         ];
 
         return view('dashboard', compact('stats'));

@@ -58,6 +58,9 @@ class LeadController extends Controller
     public function store(Request $request)
     {
         $data = $this->validateData($request);
+        if (empty($data['operator_id']) || !auth()->user()->isManager()) {
+            $data['operator_id'] = auth()->id();
+        }
         Lead::create($data);
         return redirect()->route('leads.index')->with('success', 'Lid qo\'shildi');
     }
@@ -158,6 +161,12 @@ class LeadController extends Controller
             'operator_id' => 'nullable|exists:users,id',
             'property_id' => 'nullable|exists:properties,id',
             'budget' => 'nullable|numeric|min:0',
+            'rooms_wanted' => 'nullable|integer|min:1|max:10',
+            'area_min' => 'nullable|integer|min:0',
+            'area_max' => 'nullable|integer|min:0',
+            'preferred_district' => 'nullable|string|max:255',
+            'payment_method' => 'nullable|in:' . implode(',', array_keys(Lead::PAYMENT_METHODS)),
+            'urgency' => 'nullable|in:' . implode(',', array_keys(Lead::URGENCY)),
             'notes' => 'nullable|string',
             'next_follow_up' => 'nullable|date',
         ]);

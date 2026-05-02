@@ -69,16 +69,27 @@
                         <a href="{{ route('leads.show', $lead) }}" draggable="true" data-lead-id="{{ $lead->id }}" class="block rounded-xl bg-white p-3 border border-slate-200 hover:border-slate-400 hover:shadow-sm cursor-grab transition">
                             <p class="text-sm font-medium text-slate-900 truncate">{{ $lead->name }}</p>
                             <p class="text-xs text-slate-500 mt-0.5">{{ $lead->phone }}</p>
-                            @if($lead->property)
-                                <p class="text-[11px] text-slate-400 mt-1 truncate"><i class="fas fa-building mr-1"></i>{{ $lead->property->title }}</p>
-                            @endif
-                            @if($lead->budget)
-                                <p class="text-[11px] text-slate-400 mt-0.5"><i class="fas fa-money-bill-wave mr-1"></i>{{ number_format($lead->budget, 0, '.', ' ') }}</p>
+                            <div class="mt-1.5 flex flex-wrap gap-1">
+                                @if($lead->budget)
+                                    <span class="text-[10px] bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded">{{ number_format($lead->budget / 1000000, 1) }}M</span>
+                                @endif
+                                @if($lead->rooms_wanted)
+                                    <span class="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">{{ $lead->rooms_wanted }} xona</span>
+                                @endif
+                                @if($lead->payment_method)
+                                    <span class="text-[10px] bg-cyan-50 text-cyan-700 px-1.5 py-0.5 rounded">{{ \App\Models\Lead::PAYMENT_METHODS[$lead->payment_method] ?? '' }}</span>
+                                @endif
+                                @if($lead->urgency === 'immediate')
+                                    <span class="text-[10px] bg-red-50 text-red-700 px-1.5 py-0.5 rounded font-semibold">🔥 Hoziroq</span>
+                                @endif
+                            </div>
+                            @if($lead->preferred_district)
+                                <p class="text-[11px] text-slate-400 mt-1 truncate"><i class="fas fa-location-dot mr-1"></i>{{ $lead->preferred_district }}</p>
                             @endif
                             <div class="mt-2 flex items-center justify-between text-[11px] text-slate-400">
-                                <span>{{ $lead->operator->name ?? '—' }}</span>
+                                <span class="truncate">{{ $lead->operator->name ?? '—' }}</span>
                                 @if($lead->next_follow_up)
-                                    <span class="{{ $lead->next_follow_up->isPast() ? 'text-red-500' : '' }}"><i class="far fa-calendar mr-0.5"></i>{{ $lead->next_follow_up->format('d.m') }}</span>
+                                    <span class="{{ $lead->next_follow_up->isPast() ? 'text-red-500 font-semibold' : '' }}"><i class="far fa-calendar mr-0.5"></i>{{ $lead->next_follow_up->format('d.m') }}</span>
                                 @endif
                             </div>
                         </a>

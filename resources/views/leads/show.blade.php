@@ -53,7 +53,41 @@
     <div class="grid gap-4 lg:grid-cols-3">
         <div class="lg:col-span-2 space-y-4">
             <div class="rounded-2xl bg-white p-5 border border-slate-200 shadow-sm">
-                <h3 class="text-base font-semibold text-slate-900 mb-3">Tafsilotlar</h3>
+                <h3 class="text-base font-semibold text-slate-900 mb-3">Mijoz nima istaydi</h3>
+                <dl class="grid gap-3 sm:grid-cols-3 text-sm">
+                    <div>
+                        <dt class="text-xs text-slate-500">Byudjet</dt>
+                        <dd class="text-slate-900 font-semibold">{{ $lead->budget ? number_format($lead->budget, 0, '.', ' ') . ' UZS' : '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs text-slate-500">To'lov turi</dt>
+                        <dd class="text-slate-900">{{ \App\Models\Lead::PAYMENT_METHODS[$lead->payment_method] ?? '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs text-slate-500">Qachon kerak</dt>
+                        <dd class="text-slate-900">{{ \App\Models\Lead::URGENCY[$lead->urgency] ?? '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs text-slate-500">Xonalar</dt>
+                        <dd class="text-slate-900">{{ $lead->rooms_wanted ? $lead->rooms_wanted . ' xona' : '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs text-slate-500">Maydon</dt>
+                        <dd class="text-slate-900">
+                            @if($lead->area_min || $lead->area_max)
+                                {{ $lead->area_min ?: '?' }} – {{ $lead->area_max ?: '?' }} m²
+                            @else — @endif
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs text-slate-500">Hudud</dt>
+                        <dd class="text-slate-900">{{ $lead->preferred_district ?: '—' }}</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="rounded-2xl bg-white p-5 border border-slate-200 shadow-sm">
+                <h3 class="text-base font-semibold text-slate-900 mb-3">Kuzatuv</h3>
                 <dl class="grid gap-3 sm:grid-cols-2 text-sm">
                     <div>
                         <dt class="text-xs text-slate-500">Operator</dt>
@@ -64,17 +98,17 @@
                         <dd class="text-slate-900">{{ $lead->property->title ?? '—' }}</dd>
                     </div>
                     <div>
-                        <dt class="text-xs text-slate-500">Byudjet</dt>
-                        <dd class="text-slate-900">{{ $lead->budget ? number_format($lead->budget, 0, '.', ' ') . ' UZS' : '—' }}</dd>
-                    </div>
-                    <div>
                         <dt class="text-xs text-slate-500">Keyingi aloqa</dt>
                         <dd class="{{ $lead->next_follow_up?->isPast() ? 'text-red-600' : 'text-slate-900' }}">{{ $lead->next_follow_up?->format('d.m.Y') ?? '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs text-slate-500">Yaratildi</dt>
+                        <dd class="text-slate-900">{{ $lead->created_at->format('d.m.Y H:i') }}</dd>
                     </div>
                 </dl>
                 @if($lead->notes)
                     <div class="mt-4 pt-4 border-t border-slate-100">
-                        <p class="text-xs text-slate-500 mb-1">Izoh</p>
+                        <p class="text-xs text-slate-500 mb-1">Suhbat izohi</p>
                         <p class="text-sm text-slate-700 whitespace-pre-wrap">{{ $lead->notes }}</p>
                     </div>
                 @endif

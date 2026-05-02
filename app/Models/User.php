@@ -44,6 +44,16 @@ class User extends Authenticatable
         return $this->hasMany(Reminder::class)->where('completed', false);
     }
 
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
+    public function pendingTasks(): HasMany
+    {
+        return $this->hasMany(Task::class)->whereIn('status', ['pending', 'in_progress']);
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';

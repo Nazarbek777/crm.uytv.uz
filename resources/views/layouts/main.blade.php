@@ -20,19 +20,27 @@
 <body class="bg-slate-100 min-h-screen text-slate-900">
     @php
         $pendingCount = 0;
+        $activeTaskCount = 0;
         $todayReminders = collect();
         if (auth()->check()) {
-            $pendingCount = \App\Models\Reminder::where('user_id', auth()->id())
+            $uid = auth()->id();
+            $pendingCount = \App\Models\Reminder::where('user_id', $uid)
                 ->where('completed', false)
                 ->where('remind_at', '<=', now()->endOfDay())
                 ->count();
             $todayReminders = \App\Models\Reminder::with('lead')
-                ->where('user_id', auth()->id())
+                ->where('user_id', $uid)
                 ->where('completed', false)
                 ->where('remind_at', '<=', now()->endOfDay())
                 ->orderBy('remind_at')
                 ->limit(5)
                 ->get();
+            $activeTaskCount = \App\Models\Task::where('user_id', $uid)
+                ->whereIn('status', ['pending', 'in_progress'])
+                ->where(function ($q) {
+                    $q->whereNull('due_date')->orWhereDate('due_date', '<=', today());
+                })
+                ->count();
         }
     @endphp
 
@@ -58,6 +66,12 @@
                 <div class="nav-section">Asosiy</div>
                 <a href="{{ route('dashboard') }}" class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}">
                     <i class="fas fa-chart-line"></i> Dashboard
+                </a>
+                <a href="{{ route('tasks.index') }}" class="nav-link {{ request()->is('tasks*') ? 'active' : '' }}">
+                    <i class="fas fa-list-check"></i> Tasklar
+                    @if($activeTaskCount > 0)
+                        <span class="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 rounded-full bg-cyan-500 text-white text-[10px] font-bold px-1.5">{{ $activeTaskCount > 99 ? '99+' : $activeTaskCount }}</span>
+                    @endif
                 </a>
                 <a href="{{ route('leads.index') }}" class="nav-link {{ request()->is('leads*') ? 'active' : '' }}">
                     <i class="fas fa-user-plus"></i> Lidlar

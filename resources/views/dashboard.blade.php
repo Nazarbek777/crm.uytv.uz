@@ -134,20 +134,35 @@
     </div>
     <div class="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
         <div class="px-5 pt-4 pb-3 flex items-center justify-between border-b border-slate-100">
-            <h3 class="text-base font-semibold text-slate-900">Bugungi eslatmalar</h3>
-            <a href="{{ route('reminders.index', ['filter' => 'today']) }}" class="text-xs text-cyan-600 hover:text-cyan-700">Hammasi</a>
+            <h3 class="text-base font-semibold text-slate-900">Bugungi tasklar</h3>
+            <a href="{{ route('tasks.index') }}" class="text-xs text-cyan-600 hover:text-cyan-700">Hammasi</a>
         </div>
-        @if($stats['today_reminders']->isEmpty())
-            <p class="px-5 py-6 text-center text-sm text-slate-500"><i class="fas fa-bell-slash mb-1 block text-xl text-slate-300"></i>Eslatma yo'q</p>
+        @if($stats['today_tasks']->isEmpty() && $stats['today_calls'] === 0)
+            <p class="px-5 py-6 text-center text-sm text-slate-500"><i class="fas fa-clipboard-check mb-1 block text-xl text-slate-300"></i>Bugun task yo'q</p>
         @else
-            <div class="divide-y divide-slate-100 max-h-[200px] overflow-y-auto">
-                @foreach($stats['today_reminders'] as $r)
-                    @php $isOverdue = $r->remind_at->isPast(); @endphp
-                    <a href="{{ route('reminders.edit', $r) }}" class="flex items-start gap-2 px-4 py-2.5 hover:bg-slate-50">
-                        <span class="mt-1 inline-block w-2 h-2 rounded-full {{ $isOverdue ? 'bg-red-500' : 'bg-cyan-500' }}"></span>
+            <div class="divide-y divide-slate-100 max-h-[260px] overflow-y-auto">
+                @if($stats['today_calls'] > 0)
+                    <a href="{{ route('tasks.index', ['filter' => 'today']) }}" class="flex items-center gap-2 px-4 py-2.5 hover:bg-cyan-50 bg-cyan-50/50">
+                        <i class="fas fa-phone-volume text-cyan-700 text-sm"></i>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-cyan-900">Bugun aloqa kerak</p>
+                            <p class="text-[11px] text-cyan-700">{{ $stats['today_calls'] }} ta lid</p>
+                        </div>
+                        <i class="fas fa-arrow-right text-xs text-cyan-700"></i>
+                    </a>
+                @endif
+                @foreach($stats['today_tasks'] as $t)
+                    @php
+                        $priColor = ['red' => 'bg-red-500', 'amber' => 'bg-amber-500', 'blue' => 'bg-blue-400', 'slate' => 'bg-slate-400'][$t->priorityColor()] ?? 'bg-slate-400';
+                    @endphp
+                    <a href="{{ route('tasks.edit', $t) }}" class="flex items-start gap-2 px-4 py-2.5 hover:bg-slate-50">
+                        <span class="mt-1.5 inline-block w-2 h-2 rounded-full {{ $priColor }}"></span>
                         <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-slate-900 truncate">{{ $r->title }}</p>
-                            <p class="text-[11px] {{ $isOverdue ? 'text-red-500 font-semibold' : 'text-slate-500' }}">{{ $r->remind_at->format('H:i') }} · {{ $r->remind_at->diffForHumans() }}</p>
+                            <p class="text-sm font-medium text-slate-900 truncate">{{ $t->title }}</p>
+                            <p class="text-[11px] text-slate-500">
+                                {{ $t->priorityLabel() }} · {{ $t->statusLabel() }}
+                                @if($t->due_date) · {{ $t->due_date->format('d.m') }} @endif
+                            </p>
                         </div>
                     </a>
                 @endforeach
@@ -267,6 +282,9 @@
     <div class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
         <a href="{{ route('leads.create') }}" class="flex items-center gap-2 rounded-xl bg-cyan-50 hover:bg-cyan-100 text-cyan-700 px-4 py-3 text-sm font-medium transition">
             <i class="fas fa-plus text-xs"></i> Yangi lid
+        </a>
+        <a href="{{ route('tasks.create') }}" class="flex items-center gap-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-3 text-sm font-medium transition">
+            <i class="fas fa-list-check text-xs"></i> Yangi task
         </a>
         <a href="{{ route('reminders.create') }}" class="flex items-center gap-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 px-4 py-3 text-sm font-medium transition">
             <i class="fas fa-bell text-xs"></i> Eslatma

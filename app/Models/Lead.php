@@ -14,6 +14,7 @@ class Lead extends Model
     protected $fillable = [
         'name', 'phone', 'email', 'source', 'status',
         'operator_id', 'property_id', 'budget', 'notes', 'next_follow_up',
+        'rooms_wanted', 'area_min', 'area_max', 'preferred_district', 'payment_method', 'urgency',
     ];
 
     protected $casts = [
@@ -37,6 +38,20 @@ class Lead extends Model
         'social' => 'Ijtimoiy tarmoq',
         'walk_in' => 'O\'zi keldi',
         'other' => 'Boshqa',
+    ];
+
+    public const PAYMENT_METHODS = [
+        'cash' => 'Naqd',
+        'mortgage' => 'Ipoteka',
+        'installment' => 'Bo\'lib to\'lash',
+        'mixed' => 'Aralash',
+    ];
+
+    public const URGENCY = [
+        'immediate' => 'Hoziroq',
+        '1_3_months' => '1-3 oy ichida',
+        '3_6_months' => '3-6 oy ichida',
+        'later' => 'Kechroq',
     ];
 
     public function operator(): BelongsTo
