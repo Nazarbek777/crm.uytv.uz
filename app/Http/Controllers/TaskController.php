@@ -10,46 +10,54 @@ use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
+    private const LEAD_TO_TASK_STATUS = [
+        'new' => 'pending',
+        'contacted' => 'in_progress',
+        'qualified' => 'in_progress',
+        'negotiating' => 'in_progress',
+        'won' => 'done',
+        'lost' => 'cancelled',
+    ];
+
+    private const TASK_TO_LEAD_STATUS = [
+        'pending' => 'new',
+        'in_progress' => 'contacted',
+        'done' => 'won',
+        'cancelled' => 'lost',
+    ];
+
     public function index(Request $request)
     {
         $user = auth()->user();
         $isManager = $user->isManager();
 
-        $base = Task::with(['lead', 'client', 'assigner', 'user']);
-        if ($isManager && $request->filled('user_id')) {
-            $base->where('user_id', $request->user_id);
-        } elseif (!$isManager) {
-            $base->where('user_id', $user->id);
+        $taskQuery = Task::with(['lead', 'client', 'assigner', 'user', 'comments.user']);
+        $leadQuery = Lead::with(['operator', 'property', 'comments.user']);
+
+        if (!$isManager) {
+            $taskQuery->where('user_id', $user->id);
+            $leadQuery->where('operator_id', $user->id);
         }
 
-        $tasks = (clone $base)
-            ->orderByRaw("CASE status WHEN 'in_progress' THEN 1 WHEN 'pending' THEN 2 WHEN 'done' THEN 3 ELSE 4 END")
+        $tasks = (clone $taskQuery)
             ->orderByRaw("CASE priority WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'normal' THEN 3 ELSE 4 END")
             ->orderBy('due_date')
             ->orderByDesc('id')
             ->get();
 
-        // Bugun aloqa kerak bo'lgan lidlar (avtomatik tasklar)
-        $autoTasksQuery = Lead::with('property')->whereDate('next_follow_up', today())->whereNotIn('status', ['won', 'lost']);
-        if (!$isManager) {
-            $autoTasksQuery->where('operator_id', $user->id);
-        } elseif ($request->filled('user_id')) {
-            $autoTasksQuery->where('operator_id', $request->user_id);
-        }
-        $autoTasks = $autoTasksQuery->orderBy('next_follow_up')->get();
+        $leads = (clone $leadQuery)->orderByDesc('id')->get();
 
-        $users = $isManager ? User::where('active', true)->orderBy('name')->get(['id', 'name']) : collect([$user]);
-        $leads = Lead::orderBy('name')->get(['id', 'name']);
-        $clients = Client::orderBy('name')->get(['id', 'name']);
+        $allUsers = $isManager ? User::where('active', true)->orderBy('name')->get(['id', 'name']) : collect([$user]);
+        $allLeads = Lead::orderBy('name')->get(['id', 'name']);
+        $allClients = Client::orderBy('name')->get(['id', 'name']);
 
-        if ($request->wantsJson()) {
-            return response()->json([
-                'tasks' => $tasks->map(fn($t) => $this->serialize($t)),
-                'auto_tasks' => $autoTasks->map(fn($l) => $this->serializeLead($l)),
-            ]);
-        }
-
-        return view('tasks.index', compact('tasks', 'autoTasks', 'users', 'leads', 'clients'));
+        return view('tasks.index', [
+            'tasks' => $tasks,
+            'leads' => $leads,
+            'users' => $allUsers,
+            'allLeads' => $allLeads,
+            'allClients' => $allClients,
+        ]);
     }
 
     public function store(Request $request)
@@ -61,10 +69,10 @@ class TaskController extends Controller
         }
 
         $task = Task::create($data);
-        $task->load(['lead', 'client', 'assigner', 'user']);
+        $task->load(['lead', 'client', 'assigner', 'user', 'comments.user']);
 
         if ($request->wantsJson()) {
-            return response()->json(['task' => $this->serialize($task)]);
+            return response()->json(['task' => $this->serializeTask($task)]);
         }
         return redirect()->route('tasks.index')->with('success', 'Task qo\'shildi');
     }
@@ -73,10 +81,10 @@ class TaskController extends Controller
     {
         $this->checkAccess($task);
         $task->update($this->validateData($request));
-        $task->load(['lead', 'client', 'assigner', 'user']);
+        $task->load(['lead', 'client', 'assigner', 'user', 'comments.user']);
 
         if ($request->wantsJson()) {
-            return response()->json(['task' => $this->serialize($task)]);
+            return response()->json(['task' => $this->serializeTask($task)]);
         }
         return redirect()->route('tasks.index')->with('success', 'Task yangilandi');
     }
@@ -94,6 +102,8 @@ class TaskController extends Controller
     public function setStatus(Request $request, Task $task)
     {
         $this->checkAccess($task);
+
+        // Card type: task or lead, but route is the same. Let's accept both via leads endpoint too.
         $request->validate(['status' => 'required|in:' . implode(',', array_keys(Task::STATUSES))]);
 
         $update = ['status' => $request->status];
@@ -103,10 +113,10 @@ class TaskController extends Controller
             $update['completed_at'] = null;
         }
         $task->update($update);
-        $task->load(['lead', 'client', 'assigner', 'user']);
+        $task->load(['lead', 'client', 'assigner', 'user', 'comments.user']);
 
         if ($request->wantsJson()) {
-            return response()->json(['task' => $this->serialize($task)]);
+            return response()->json(['task' => $this->serializeTask($task)]);
         }
         return back()->with('success', 'Task statusi yangilandi');
     }
@@ -116,12 +126,34 @@ class TaskController extends Controller
         $this->checkAccess($task);
         $request->validate(['priority' => 'required|in:' . implode(',', array_keys(Task::PRIORITIES))]);
         $task->update(['priority' => $request->priority]);
-        $task->load(['lead', 'client', 'assigner', 'user']);
+        $task->load(['lead', 'client', 'assigner', 'user', 'comments.user']);
 
         if ($request->wantsJson()) {
-            return response()->json(['task' => $this->serialize($task)]);
+            return response()->json(['task' => $this->serializeTask($task)]);
         }
         return back()->with('success', 'Prioritet o\'zgartirildi');
+    }
+
+    public function setLeadStatus(Request $request, Lead $lead)
+    {
+        $user = auth()->user();
+        if (!$user->isManager() && $lead->operator_id !== $user->id) abort(403);
+
+        $request->validate(['task_status' => 'required|in:' . implode(',', array_keys(Task::STATUSES))]);
+        $newLeadStatus = self::TASK_TO_LEAD_STATUS[$request->task_status] ?? 'new';
+
+        // Aqlli mapping: agar lid hozir contacted/qualified/negotiating bo'lsa va target = in_progress bo'lsa, o'zgartirmaymiz
+        if ($request->task_status === 'in_progress' && in_array($lead->status, ['contacted', 'qualified', 'negotiating'])) {
+            $newLeadStatus = $lead->status;
+        }
+
+        $lead->update(['status' => $newLeadStatus]);
+        $lead->load(['operator', 'property', 'comments.user']);
+
+        if ($request->wantsJson()) {
+            return response()->json(['lead' => $this->serializeLead($lead)]);
+        }
+        return back()->with('success', 'Lid statusi yangilandi');
     }
 
     private function checkAccess(Task $task, bool $forDelete = false): void
@@ -148,9 +180,10 @@ class TaskController extends Controller
         ]);
     }
 
-    private function serialize(Task $t): array
+    public function serializeTask(Task $t): array
     {
         return [
+            'kind' => 'task',
             'id' => $t->id,
             'title' => $t->title,
             'description' => $t->description,
@@ -160,6 +193,7 @@ class TaskController extends Controller
             'assigned_by' => $t->assigned_by,
             'lead_id' => $t->lead_id,
             'lead_name' => $t->lead?->name,
+            'lead_phone' => $t->lead?->phone,
             'client_id' => $t->client_id,
             'client_name' => $t->client?->name,
             'due_date' => $t->due_date?->format('Y-m-d'),
@@ -172,23 +206,49 @@ class TaskController extends Controller
             'status_color' => $t->statusColor(),
             'is_overdue' => $t->isOverdue(),
             'completed_at' => $t->completed_at?->toIso8601String(),
-            'created_at' => $t->created_at->toIso8601String(),
+            'comments_count' => $t->comments->count(),
+            'comments' => $t->comments->map(fn($c) => [
+                'id' => $c->id, 'content' => $c->content,
+                'user_id' => $c->user_id, 'user_name' => $c->user?->name,
+                'created_human' => $c->created_at->diffForHumans(),
+            ])->values()->all(),
         ];
     }
 
-    private function serializeLead(Lead $l): array
+    public function serializeLead(Lead $l): array
     {
+        $taskStatus = self::LEAD_TO_TASK_STATUS[$l->status] ?? 'pending';
         return [
+            'kind' => 'lead',
             'id' => $l->id,
-            'name' => $l->name,
+            'title' => $l->name,
+            'description' => null,
             'phone' => $l->phone,
             'phone_clean' => preg_replace('/\s+/', '', $l->phone ?? ''),
-            'status' => $l->status,
-            'status_label' => $l->statusLabel(),
-            'budget' => $l->budget,
+            'budget' => (float) $l->budget,
             'rooms_wanted' => $l->rooms_wanted,
+            'preferred_district' => $l->preferred_district,
             'payment_method' => $l->payment_method,
             'payment_label' => Lead::PAYMENT_METHODS[$l->payment_method] ?? null,
+            'urgency' => $l->urgency,
+            'lead_status' => $l->status,
+            'lead_status_label' => $l->statusLabel(),
+            'user_id' => $l->operator_id,
+            'user_name' => $l->operator?->name,
+            'property_title' => $l->property?->title,
+            'due_date' => $l->next_follow_up?->format('Y-m-d'),
+            'due_date_human' => $l->next_follow_up?->format('d.m.Y'),
+            'priority' => $l->urgency === 'immediate' ? 'urgent' : ($l->urgency === '1_3_months' ? 'high' : 'normal'),
+            'priority_label' => $l->urgency === 'immediate' ? 'Shoshilinch' : ($l->urgency === '1_3_months' ? 'Yuqori' : 'Oddiy'),
+            'priority_color' => $l->urgency === 'immediate' ? 'red' : ($l->urgency === '1_3_months' ? 'amber' : 'blue'),
+            'status' => $taskStatus,
+            'is_overdue' => $l->next_follow_up && $l->next_follow_up->isPast() && !$l->next_follow_up->isToday() && !in_array($l->status, ['won', 'lost']),
+            'comments_count' => $l->comments->count(),
+            'comments' => $l->comments->map(fn($c) => [
+                'id' => $c->id, 'content' => $c->content,
+                'user_id' => $c->user_id, 'user_name' => $c->user?->name,
+                'created_human' => $c->created_at->diffForHumans(),
+            ])->values()->all(),
         ];
     }
 }

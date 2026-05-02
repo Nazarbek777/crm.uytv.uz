@@ -11,6 +11,7 @@ use App\Http\Controllers\OperatorController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\ReminderController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\CommentController;
 
 Route::get('/', function () {
     return auth()->check() ? redirect()->route('dashboard') : redirect()->route('login');
@@ -44,4 +45,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('tasks', TaskController::class)->except(['show', 'create', 'edit']);
     Route::patch('/tasks/{task}/status', [TaskController::class, 'setStatus'])->name('tasks.status');
     Route::patch('/tasks/{task}/priority', [TaskController::class, 'setPriority'])->name('tasks.priority');
+    Route::patch('/leads/{lead}/task-status', [TaskController::class, 'setLeadStatus'])->name('leads.task-status');
+
+    Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 });
