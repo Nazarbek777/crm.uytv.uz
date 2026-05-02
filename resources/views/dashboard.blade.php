@@ -75,6 +75,59 @@
     </div>
 </div>
 
+<div class="grid gap-6 xl:grid-cols-3 mb-8">
+    <div class="rounded-3xl bg-white p-6 shadow-lg border border-slate-200">
+        <p class="text-sm text-slate-500">Minimal narx</p>
+        <p class="mt-4 text-4xl font-semibold text-slate-900">{{ number_format($stats['min_price'], 0, ',', ' ') }} UZS</p>
+        <p class="mt-3 text-sm text-slate-500">Bu narx bo‘yicha boshlash mumkin.</p>
+    </div>
+    <div class="rounded-3xl bg-white p-6 shadow-lg border border-slate-200">
+        <p class="text-sm text-slate-500">O‘rtacha uy narxi</p>
+        <p class="mt-4 text-4xl font-semibold text-slate-900">{{ number_format($stats['avg_price'], 0, ',', ' ') }} UZS</p>
+        <p class="mt-3 text-sm text-slate-500">Bozor uchun real boshlang‘ich qiymat.</p>
+    </div>
+    <div class="rounded-3xl bg-white p-6 shadow-lg border border-slate-200">
+        <p class="text-sm text-slate-500">Maximum narx</p>
+        <p class="mt-4 text-4xl font-semibold text-slate-900">{{ number_format($stats['max_price'], 0, ',', ' ') }} UZS</p>
+        <p class="mt-3 text-sm text-slate-500">Premium segmentdagi uylar.</p>
+    </div>
+</div>
+
+<div class="rounded-3xl bg-gradient-to-br from-slate-950 to-slate-900 p-6 text-white shadow-2xl border border-slate-800 mb-8">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+        <div>
+            <h3 class="text-xl font-semibold">Ipoteka va boshlang‘ich to‘lov</h3>
+            <p class="text-sm text-slate-400">Real vaqt narxlari va to‘lov qulayliklarini tezda ko‘ring.</p>
+        </div>
+        <div class="inline-flex items-center gap-2 rounded-3xl bg-slate-900/60 px-4 py-3 text-sm text-slate-300">
+            <i class="fas fa-percent text-emerald-400"></i>
+            <span>{{ $stats['mortgage_rate'] }}% yillik ipoteka</span>
+        </div>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-3xl bg-slate-900/90 p-4 border border-slate-800">
+            <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Boshlang‘ich to‘lov</p>
+            <p class="mt-3 text-3xl font-semibold text-white">{{ number_format($stats['down_payment'], 0, ',', ' ') }} UZS</p>
+            <p class="mt-2 text-sm text-slate-400">O‘rtacha uy uchun 30% boshlang‘ich.</p>
+        </div>
+        <div class="rounded-3xl bg-slate-900/90 p-4 border border-slate-800">
+            <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Ipoteka summasi</p>
+            <p class="mt-3 text-3xl font-semibold text-white">{{ number_format(round($stats['avg_price'] * 0.7), 0, ',', ' ') }} UZS</p>
+            <p class="mt-2 text-sm text-slate-400">70% kredit orqali moliyalashtirish.</p>
+        </div>
+        <div class="rounded-3xl bg-slate-900/90 p-4 border border-slate-800">
+            <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Oylik to‘lov</p>
+            <p class="mt-3 text-3xl font-semibold text-white">{{ number_format($stats['monthly_mortgage'], 0, ',', ' ') }} UZS</p>
+            <p class="mt-2 text-sm text-slate-400">20 yil uchun tahminiy oylik.</p>
+        </div>
+        <div class="rounded-3xl bg-slate-900/90 p-4 border border-slate-800">
+            <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Boshlang‘ich segment</p>
+            <p class="mt-3 text-3xl font-semibold text-white">{{ $stats['min_price'] ? 'Boshlang‘ich' : '---' }}</p>
+            <p class="mt-2 text-sm text-slate-400">Tezda narx bandini aniqlang.</p>
+        </div>
+    </div>
+</div>
+
 <div class="rounded-3xl bg-white p-6 shadow-lg border border-slate-200 mb-8">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
         <div>
