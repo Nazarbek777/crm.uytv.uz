@@ -84,9 +84,11 @@
                 </a>
 
                 <div class="nav-section">Tizim</div>
-                <a href="{{ route('operators.index') }}" class="nav-link {{ request()->is('operators*') ? 'active' : '' }}">
-                    <i class="fas fa-id-badge"></i> Operatorlar
-                </a>
+                @if(auth()->check() && auth()->user()->isManager())
+                    <a href="{{ route('operators.index') }}" class="nav-link {{ request()->is('operators*') ? 'active' : '' }}">
+                        <i class="fas fa-id-badge"></i> Operatorlar
+                    </a>
+                @endif
                 <a href="{{ route('mortgage.calculator') }}" class="nav-link {{ request()->is('mortgage-calculator') ? 'active' : '' }}">
                     <i class="fas fa-calculator"></i> Kalkulyator
                 </a>

@@ -11,6 +11,16 @@ use Illuminate\Validation\Rule;
 
 class OperatorController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if (!auth()->user()->isManager()) {
+                abort(403, 'Bu bo\'lim faqat menejerlar uchun');
+            }
+            return $next($request);
+        });
+    }
+
     public function index(Request $request)
     {
         $query = User::query()->withCount(['leads', 'sales']);

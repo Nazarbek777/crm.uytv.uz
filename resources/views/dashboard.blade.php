@@ -7,7 +7,7 @@
     <div class="rounded-2xl bg-white p-4 border border-slate-200 shadow-sm">
         <div class="flex items-start justify-between">
             <div>
-                <p class="text-xs text-slate-500">Joriy oy daromadi</p>
+                <p class="text-xs text-slate-500">{{ $stats['is_manager'] ? 'Joriy oy daromadi' : 'Mening oylik daromadim' }}</p>
                 <p class="mt-1 text-2xl font-bold text-slate-900">{{ number_format($stats['monthly_income'], 0, ',', ' ') }}</p>
                 <p class="text-[11px] text-slate-400 mt-0.5">UZS · {{ $stats['monthly_sales'] }} ta savdo</p>
             </div>
@@ -20,7 +20,7 @@
     <div class="rounded-2xl bg-white p-4 border border-slate-200 shadow-sm">
         <div class="flex items-start justify-between">
             <div>
-                <p class="text-xs text-slate-500">Jami daromad</p>
+                <p class="text-xs text-slate-500">{{ $stats['is_manager'] ? 'Jami daromad' : 'Mening jami daromadim' }}</p>
                 <p class="mt-1 text-2xl font-bold text-slate-900">{{ number_format($stats['total_income'], 0, ',', ' ') }}</p>
                 <p class="text-[11px] text-slate-400 mt-0.5">UZS · {{ $stats['sales'] }} ta savdo</p>
             </div>
@@ -78,15 +78,27 @@
             <p class="text-lg font-bold text-slate-900">{{ $stats['clients'] }}</p>
         </div>
     </a>
-    <a href="{{ route('investors.index') }}" class="rounded-2xl bg-white p-4 border border-slate-200 shadow-sm hover:shadow transition flex items-center gap-3">
-        <div class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-50 text-cyan-700">
-            <i class="fas fa-user-tie"></i>
-        </div>
-        <div>
-            <p class="text-xs text-slate-500">Investorlar</p>
-            <p class="text-lg font-bold text-slate-900">{{ $stats['investors'] }} <span class="text-xs text-slate-400 font-normal">/ {{ $stats['active_investors'] }} faol</span></p>
-        </div>
-    </a>
+    @if($stats['is_manager'])
+        <a href="{{ route('investors.index') }}" class="rounded-2xl bg-white p-4 border border-slate-200 shadow-sm hover:shadow transition flex items-center gap-3">
+            <div class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-50 text-cyan-700">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500">Investorlar</p>
+                <p class="text-lg font-bold text-slate-900">{{ $stats['investors'] }} <span class="text-xs text-slate-400 font-normal">/ {{ $stats['active_investors'] }} faol</span></p>
+            </div>
+        </a>
+    @else
+        <a href="{{ route('leads.index') }}" class="rounded-2xl bg-white p-4 border border-slate-200 shadow-sm hover:shadow transition flex items-center gap-3">
+            <div class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-50 text-cyan-700">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div>
+                <p class="text-xs text-slate-500">Mening lidlarim</p>
+                <p class="text-lg font-bold text-slate-900">{{ $stats['leads_total'] }} <span class="text-xs text-slate-400 font-normal">/ {{ $stats['leads_active'] }} faol</span></p>
+            </div>
+        </a>
+    @endif
     <a href="{{ route('sales.index') }}" class="rounded-2xl bg-white p-4 border border-slate-200 shadow-sm hover:shadow transition flex items-center gap-3">
         <div class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-700">
             <i class="fas fa-handshake"></i>
@@ -211,28 +223,43 @@
         @endif
     </div>
 
-    <div class="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-        <div class="px-5 pt-4 pb-3 flex items-center justify-between border-b border-slate-100">
-            <h3 class="text-base font-semibold text-slate-900">Top investorlar</h3>
-            <a href="{{ route('investors.index') }}" class="text-xs text-cyan-600 hover:text-cyan-700">Barchasi</a>
-        </div>
-        @if($stats['top_investors']->isEmpty())
-            <p class="text-sm text-slate-500 px-5 py-8 text-center">Investor yo'q.</p>
-        @else
-            <div class="divide-y divide-slate-100">
-                @foreach($stats['top_investors'] as $i => $inv)
-                    <div class="flex items-center gap-3 px-5 py-3">
-                        <div class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 text-xs font-bold">{{ $i + 1 }}</div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-slate-900 truncate">{{ $inv->name }}</p>
-                            <p class="text-[11px] text-slate-500">{{ $inv->phone ?? '—' }}</p>
-                        </div>
-                        <span class="text-xs font-semibold text-slate-700 bg-slate-100 rounded-full px-2.5 py-1">{{ $inv->properties_count }} uy</span>
-                    </div>
-                @endforeach
+    @if($stats['is_manager'])
+        <div class="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+            <div class="px-5 pt-4 pb-3 flex items-center justify-between border-b border-slate-100">
+                <h3 class="text-base font-semibold text-slate-900">Top investorlar</h3>
+                <a href="{{ route('investors.index') }}" class="text-xs text-cyan-600 hover:text-cyan-700">Barchasi</a>
             </div>
-        @endif
-    </div>
+            @if($stats['top_investors']->isEmpty())
+                <p class="text-sm text-slate-500 px-5 py-8 text-center">Investor yo'q.</p>
+            @else
+                <div class="divide-y divide-slate-100">
+                    @foreach($stats['top_investors'] as $i => $inv)
+                        <div class="flex items-center gap-3 px-5 py-3">
+                            <div class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 text-xs font-bold">{{ $i + 1 }}</div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-slate-900 truncate">{{ $inv->name }}</p>
+                                <p class="text-[11px] text-slate-500">{{ $inv->phone ?? '—' }}</p>
+                            </div>
+                            <span class="text-xs font-semibold text-slate-700 bg-slate-100 rounded-full px-2.5 py-1">{{ $inv->properties_count }} uy</span>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    @else
+        <div class="rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 p-5 text-white shadow-sm">
+            <p class="text-xs uppercase tracking-wider text-white/70">Mening natijalarim</p>
+            <p class="mt-2 text-3xl font-bold">{{ $stats['leads_total'] }} <span class="text-sm font-normal opacity-80">lid</span></p>
+            <p class="text-sm opacity-90 mt-1">Faol: <span class="font-semibold">{{ $stats['leads_active'] }}</span> · Yangi: <span class="font-semibold">{{ $stats['leads_new'] }}</span></p>
+            <div class="mt-4 pt-4 border-t border-white/20">
+                <p class="text-xs uppercase tracking-wider text-white/70">Joriy oy</p>
+                <p class="mt-1 text-2xl font-bold">{{ number_format($stats['monthly_income'], 0, '.', ' ') }} <span class="text-sm font-normal opacity-80">UZS</span></p>
+            </div>
+            <a href="{{ route('leads.index') }}" class="mt-4 inline-flex items-center gap-2 text-sm font-medium text-white hover:underline">
+                Lidlarni ko'rish <i class="fas fa-arrow-right text-xs"></i>
+            </a>
+        </div>
+    @endif
 </div>
 
 <div class="rounded-2xl bg-white p-5 border border-slate-200 shadow-sm">

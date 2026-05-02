@@ -15,14 +15,19 @@ class LeadController extends Controller
     public function index(Request $request)
     {
         $view = $request->get('view', 'pipeline');
+        $user = auth()->user();
 
         $query = Lead::with(['operator', 'property']);
+
+        if (!$user->isManager()) {
+            $query->where('operator_id', $user->id);
+        }
 
         if ($request->filled('search')) {
             $s = $request->search;
             $query->where(fn($q) => $q->where('name', 'like', "%$s%")->orWhere('phone', 'like', "%$s%")->orWhere('email', 'like', "%$s%"));
         }
-        if ($request->filled('operator_id')) {
+        if ($request->filled('operator_id') && $user->isManager()) {
             $query->where('operator_id', $request->operator_id);
         }
         if ($request->filled('source')) {
@@ -59,12 +64,14 @@ class LeadController extends Controller
 
     public function show(Lead $lead)
     {
+        $this->authorize($lead);
         $lead->load(['operator', 'property', 'reminders.user']);
         return view('leads.show', compact('lead'));
     }
 
     public function edit(Lead $lead)
     {
+        $this->authorize($lead);
         $operators = User::where('active', true)->orderBy('name')->get();
         $properties = Property::orderBy('title')->get();
         return view('leads.edit', compact('lead', 'operators', 'properties'));
@@ -72,6 +79,7 @@ class LeadController extends Controller
 
     public function update(Request $request, Lead $lead)
     {
+        $this->authorize($lead);
         $data = $this->validateData($request);
         $lead->update($data);
         return redirect()->route('leads.show', $lead)->with('success', 'Lid yangilandi');
@@ -79,12 +87,14 @@ class LeadController extends Controller
 
     public function destroy(Lead $lead)
     {
+        $this->authorize($lead);
         $lead->delete();
         return redirect()->route('leads.index')->with('success', 'Lid o\'chirildi');
     }
 
     public function updateStatus(Request $request, Lead $lead)
     {
+        $this->authorize($lead);
         $request->validate(['status' => 'required|in:' . implode(',', array_keys(Lead::STATUSES))]);
         $lead->update(['status' => $request->status]);
 
@@ -92,6 +102,14 @@ class LeadController extends Controller
             return response()->json(['ok' => true]);
         }
         return back()->with('success', 'Status yangilandi');
+    }
+
+    private function authorize(Lead $lead): void
+    {
+        $user = auth()->user();
+        if (!$user->isManager() && $lead->operator_id !== $user->id) {
+            abort(403, 'Sizga bu lid biriktirilmagan');
+        }
     }
 
     public function convert(Request $request, Lead $lead)

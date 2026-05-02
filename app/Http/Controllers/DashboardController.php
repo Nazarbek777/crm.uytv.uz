@@ -14,11 +14,22 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $totalSales = Sale::count();
-        $monthlyTrend = $this->monthlyTrend(6);
-        $thisMonthIncome = Sale::whereMonth('sale_date', now()->month)->whereYear('sale_date', now()->year)->sum('price');
+        $user = auth()->user();
+        $isManager = $user->isManager();
+
+        $salesQuery = Sale::query();
+        $leadsQuery = Lead::query();
+        if (!$isManager) {
+            $salesQuery->where('operator_id', $user->id);
+            $leadsQuery->where('operator_id', $user->id);
+        }
+
+        $totalSales = (clone $salesQuery)->count();
+        $monthlyTrend = $this->monthlyTrend(6, $isManager ? null : $user->id);
+        $thisMonthIncome = (clone $salesQuery)->whereMonth('sale_date', now()->month)->whereYear('sale_date', now()->year)->sum('price');
 
         $stats = [
+            'is_manager' => $isManager,
             'investors' => Investor::count(),
             'properties' => Property::count(),
             'free' => Property::where('status', 'free')->count(),
@@ -26,23 +37,23 @@ class DashboardController extends Controller
             'rent' => Property::where('status', 'rent')->count(),
             'clients' => Client::count(),
             'sales' => $totalSales,
-            'total_income' => Sale::sum('price'),
+            'total_income' => (clone $salesQuery)->sum('price'),
             'monthly_income' => $thisMonthIncome,
-            'average_sale' => $totalSales ? round(Sale::avg('price')) : 0,
+            'average_sale' => $totalSales ? round((clone $salesQuery)->avg('price')) : 0,
             'active_investors' => Investor::whereHas('properties')->count(),
-            'monthly_sales' => Sale::whereMonth('sale_date', now()->month)->whereYear('sale_date', now()->year)->count(),
-            'quarterly_growth' => $this->calculateQuarterlyGrowth(),
-            'recent_sales' => Sale::with(['client', 'property'])->latest('sale_date')->limit(6)->get(),
-            'top_investors' => Investor::withCount('properties')->orderByDesc('properties_count')->limit(5)->get(),
+            'monthly_sales' => (clone $salesQuery)->whereMonth('sale_date', now()->month)->whereYear('sale_date', now()->year)->count(),
+            'quarterly_growth' => $this->calculateQuarterlyGrowth($isManager ? null : $user->id),
+            'recent_sales' => (clone $salesQuery)->with(['client', 'property', 'operator'])->latest('sale_date')->limit(6)->get(),
+            'top_investors' => $isManager ? Investor::withCount('properties')->orderByDesc('properties_count')->limit(5)->get() : collect(),
             'chart_months' => $monthlyTrend['labels'],
             'chart_sales' => $monthlyTrend['sales_count'],
             'chart_income' => $monthlyTrend['income'],
-            'leads_total' => Lead::count(),
-            'leads_new' => Lead::where('status', 'new')->count(),
-            'leads_active' => Lead::whereIn('status', ['contacted', 'qualified', 'negotiating'])->count(),
-            'leads_by_status' => Lead::selectRaw('status, count(*) as c')->groupBy('status')->pluck('c', 'status'),
+            'leads_total' => (clone $leadsQuery)->count(),
+            'leads_new' => (clone $leadsQuery)->where('status', 'new')->count(),
+            'leads_active' => (clone $leadsQuery)->whereIn('status', ['contacted', 'qualified', 'negotiating'])->count(),
+            'leads_by_status' => (clone $leadsQuery)->selectRaw('status, count(*) as c')->groupBy('status')->pluck('c', 'status'),
             'today_reminders' => Reminder::with('lead')
-                ->where('user_id', auth()->id())
+                ->where('user_id', $user->id)
                 ->where('completed', false)
                 ->where('remind_at', '<=', now()->endOfDay())
                 ->orderBy('remind_at')
@@ -52,7 +63,7 @@ class DashboardController extends Controller
         return view('dashboard', compact('stats'));
     }
 
-    private function monthlyTrend(int $monthsBack)
+    private function monthlyTrend(int $monthsBack, ?int $operatorId = null)
     {
         $labels = [];
         $salesCount = [];
@@ -62,6 +73,9 @@ class DashboardController extends Controller
             $date = now()->subMonths($i);
             $labels[] = $monthNames[$date->month - 1];
             $rows = Sale::whereMonth('sale_date', $date->month)->whereYear('sale_date', $date->year);
+            if ($operatorId) {
+                $rows->where('operator_id', $operatorId);
+            }
             $salesCount[] = (clone $rows)->count();
             $income[] = (float) (clone $rows)->sum('price');
         }
@@ -131,13 +145,20 @@ class DashboardController extends Controller
         ]);
     }
 
-    private function calculateQuarterlyGrowth()
+    private function calculateQuarterlyGrowth(?int $operatorId = null)
     {
-        $currentQuarter = Sale::whereBetween('created_at', [now()->startOfQuarter(), now()->endOfQuarter()])->sum('price');
-        $previousQuarter = Sale::whereBetween('created_at', [now()->subQuarter()->startOfQuarter(), now()->subQuarter()->endOfQuarter()])->sum('price');
+        $currentQ = Sale::whereBetween('sale_date', [now()->startOfQuarter(), now()->endOfQuarter()]);
+        $previousQ = Sale::whereBetween('sale_date', [now()->subQuarter()->startOfQuarter(), now()->subQuarter()->endOfQuarter()]);
 
-        if ($previousQuarter == 0) return 0;
+        if ($operatorId) {
+            $currentQ->where('operator_id', $operatorId);
+            $previousQ->where('operator_id', $operatorId);
+        }
 
-        return round((($currentQuarter - $previousQuarter) / $previousQuarter) * 100);
+        $current = (float) $currentQ->sum('price');
+        $previous = (float) $previousQ->sum('price');
+
+        if ($previous == 0) return 0;
+        return round((($current - $previous) / $previous) * 100);
     }
 }
