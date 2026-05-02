@@ -139,59 +139,30 @@
 </div>
 
 <div class="rounded-3xl bg-white p-6 shadow-lg border border-slate-200 mb-8">
-    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
         <div>
-            <h3 class="text-xl font-semibold text-slate-900">Ipoteka kalkulyatori</h3>
-            <p class="text-sm text-slate-500">Kredit summasi, foiz stavkasi va muddatni kiriting va oylik to‘lovni hisoblang.</p>
+            <h3 class="text-xl font-semibold text-slate-900">Tezkor amallar</h3>
+            <p class="text-sm text-slate-500">Alohida bo‘limlarga tez kirish.</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+            <a href="{{ route('mortgage.calculator') }}" class="inline-flex items-center gap-2 rounded-2xl bg-purple-600 px-4 py-3 text-white shadow-lg hover:bg-purple-700 transition">
+                <i class="fas fa-calculator"></i> Ipoteka Kalkulyatori
+            </a>
+            <a href="{{ route('investors.index') }}" class="inline-flex items-center gap-2 rounded-2xl bg-cyan-600 px-4 py-3 text-white shadow-lg hover:bg-cyan-700 transition">
+                <i class="fas fa-user-tie"></i> Yangi Investor
+            </a>
+            <a href="{{ route('properties.index') }}" class="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-white shadow-lg hover:bg-emerald-700 transition">
+                <i class="fas fa-building"></i> Yangi Uy
+            </a>
+            <a href="{{ route('clients.index') }}" class="inline-flex items-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 text-white shadow-lg hover:bg-violet-700 transition">
+                <i class="fas fa-users"></i> Yangi Mijoz
+            </a>
+            <a href="{{ route('sales.index') }}" class="inline-flex items-center gap-2 rounded-2xl bg-orange-500 px-4 py-3 text-white shadow-lg hover:bg-orange-600 transition">
+                <i class="fas fa-handshake"></i> Yangi Savdo
+            </a>
         </div>
     </div>
-    <form action="{{ route('calculate.mortgage') }}" method="POST" class="grid gap-4 md:grid-cols-4 mb-6">
-        @csrf
-        <div>
-            <label for="loan_amount" class="block text-sm font-medium text-slate-700 mb-2">Kredit summasi (UZS)</label>
-            <input type="number" id="loan_amount" name="loan_amount" value="{{ old('loan_amount', $stats['avg_price'] * 0.7) }}" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:border-slate-500 focus:outline-none" placeholder="Masalan: 500000000" required>
-        </div>
-        <div>
-            <label for="interest_rate" class="block text-sm font-medium text-slate-700 mb-2">Yillik foiz stavkasi (%)</label>
-            <input type="number" step="0.01" id="interest_rate" name="interest_rate" value="{{ old('interest_rate', 12) }}" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:border-slate-500 focus:outline-none" placeholder="Masalan: 12" required>
-        </div>
-        <div>
-            <label for="term_years" class="block text-sm font-medium text-slate-700 mb-2">Muddat (yil)</label>
-            <input type="number" id="term_years" name="term_years" value="{{ old('term_years', 20) }}" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:border-slate-500 focus:outline-none" placeholder="Masalan: 20" required>
-        </div>
-        <div class="flex items-end">
-            <button type="submit" class="w-full rounded-2xl bg-slate-900 px-6 py-3 text-white font-medium hover:bg-slate-800 transition">
-                Hisoblash
-            </button>
-        </div>
-    </form>
-    @if(session('mortgage_result'))
-        <div class="rounded-3xl bg-slate-50 p-6 border border-slate-200">
-            <h4 class="text-lg font-semibold text-slate-900 mb-4">Hisoblash natijasi</h4>
-            <div class="grid gap-4 md:grid-cols-3">
-                <div class="text-center">
-                    <p class="text-sm text-slate-500">Oylik to‘lov</p>
-                    <p class="text-2xl font-semibold text-slate-900">{{ number_format(session('mortgage_result')['monthly_payment'], 0, ',', ' ') }} UZS</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-sm text-slate-500">Jami to‘lov</p>
-                    <p class="text-2xl font-semibold text-slate-900">{{ number_format(session('mortgage_result')['total_payment'], 0, ',', ' ') }} UZS</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-sm text-slate-500">Jami foiz</p>
-                    <p class="text-2xl font-semibold text-slate-900">{{ number_format(session('mortgage_result')['total_interest'], 0, ',', ' ') }} UZS</p>
-                </div>
-            </div>
-            <p class="text-sm text-slate-500 mt-4">
-                Kredit: {{ number_format(session('mortgage_result')['loan_amount'], 0, ',', ' ') }} UZS, 
-                Foiz: {{ session('mortgage_result')['interest_rate'] }}%, 
-                Muddat: {{ session('mortgage_result')['term_years'] }} yil
-            </p>
-        </div>
-    @endif
 </div>
-
-<div class="rounded-3xl bg-white p-6 shadow-lg border border-slate-200 mb-8">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
         <div>
             <h3 class="text-xl font-semibold text-slate-900">Tezkor amallar</h3>

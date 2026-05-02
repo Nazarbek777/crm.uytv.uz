@@ -47,15 +47,30 @@ class DashboardController extends Controller
         return view('dashboard', compact('stats'));
     }
 
+    public function mortgageCalculator()
+    {
+        $avgPrice = Property::count() ? Property::avg('price') : 0;
+        return view('mortgage-calculator', compact('avgPrice'));
+    }
+
     public function calculateMortgage(Request $request)
     {
         $request->validate([
-            'loan_amount' => 'required|numeric|min:0',
+            'property_price' => 'required|numeric|min:0',
+            'down_payment_percent' => 'required|numeric|min:0|max:100',
             'interest_rate' => 'required|numeric|min:0|max:100',
             'term_years' => 'required|integer|min:1|max:50',
         ]);
 
-        $loanAmount = $request->loan_amount;
+        $propertyPrice = $request->property_price;
+        $downPaymentPercent = $request->down_payment_percent;
+        $downPayment = $propertyPrice * ($downPaymentPercent / 100);
+        $loanAmount = $propertyPrice - $downPayment;
+
+        if ($loanAmount <= 0) {
+            return back()->withErrors(['loan_amount' => 'Kredit summasi musbat bo‘lishi kerak.']);
+        }
+
         $annualRate = $request->interest_rate / 100;
         $monthlyRate = $annualRate / 12;
         $termMonths = $request->term_years * 12;
@@ -66,12 +81,15 @@ class DashboardController extends Controller
 
         return back()->with([
             'mortgage_result' => [
+                'property_price' => $propertyPrice,
+                'down_payment' => round($downPayment),
+                'loan_amount' => round($loanAmount),
                 'monthly_payment' => round($monthlyPayment),
                 'total_payment' => round($totalPayment),
                 'total_interest' => round($totalInterest),
-                'loan_amount' => $loanAmount,
                 'interest_rate' => $request->interest_rate,
                 'term_years' => $request->term_years,
+                'down_payment_percent' => $downPaymentPercent,
             ]
         ]);
     }

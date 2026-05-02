@@ -21,26 +21,13 @@
     <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-full max-w-[240px] md:w-64 bg-slate-950/95 backdrop-blur-xl border-r border-white/10 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto">
         <div class="flex min-h-full flex-col px-4 py-6">
             <div class="mb-6">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-xl">
-                        <i class="fas fa-building text-base"></i>
+                <div class="flex items-center gap-3">
+                    <div class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-xl">
+                        <i class="fas fa-building text-sm"></i>
                     </div>
                     <div>
-                        <h1 class="text-lg font-semibold text-white">CRM Uy</h1>
+                        <h1 class="text-base font-semibold text-white">CRM Uy</h1>
                         <p class="text-slate-400 text-xs">Uy sotish boshqaruvi</p>
-                    </div>
-                </div>
-                <div class="rounded-3xl bg-slate-900/90 p-4 border border-white/10 shadow-2xl">
-                    <p class="text-slate-400 text-[10px] uppercase tracking-[0.35em] mb-3">Tezkor</p>
-                    <div class="space-y-2">
-                        <div class="rounded-3xl bg-slate-950 p-3">
-                            <p class="text-[10px] uppercase tracking-[0.25em] text-slate-500">Bugun</p>
-                            <p class="text-lg font-semibold text-white">12 ta</p>
-                        </div>
-                        <div class="rounded-3xl bg-slate-950 p-3">
-                            <p class="text-[10px] uppercase tracking-[0.25em] text-slate-500">Ipoteka</p>
-                            <p class="text-lg font-semibold text-white">12 oy</p>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -50,6 +37,10 @@
                 <a href="{{ route('dashboard') }}" class="flex items-center gap-3 rounded-3xl px-3 py-3 text-sm text-slate-200 hover:bg-slate-800 hover:text-white transition {{ request()->is('dashboard') ? 'bg-slate-800 text-white shadow-2xl border-l-4 border-cyan-400' : '' }}">
                     <i class="fas fa-chart-line w-4"></i>
                     Dashboard
+                </a>
+                <a href="{{ route('mortgage.calculator') }}" class="flex items-center gap-3 rounded-3xl px-3 py-3 text-sm text-slate-200 hover:bg-slate-800 hover:text-white transition {{ request()->is('mortgage-calculator') ? 'bg-slate-800 text-white shadow-2xl border-l-4 border-cyan-400' : '' }}">
+                    <i class="fas fa-calculator w-4"></i>
+                    Ipoteka Kalkulyatori
                 </a>
                 <a href="{{ route('investors.index') }}" class="flex items-center gap-3 rounded-3xl px-3 py-3 text-sm text-slate-200 hover:bg-slate-800 hover:text-white transition {{ request()->is('investors*') ? 'bg-slate-800 text-white shadow-2xl border-l-4 border-cyan-400' : '' }}">
                     <i class="fas fa-user-tie w-4"></i>
