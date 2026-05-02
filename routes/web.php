@@ -41,6 +41,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/reminders/{reminder}/complete', [ReminderController::class, 'complete'])->name('reminders.complete');
     Route::patch('/reminders/{reminder}/uncomplete', [ReminderController::class, 'uncomplete'])->name('reminders.uncomplete');
 
-    Route::resource('tasks', TaskController::class)->except(['show']);
+    Route::resource('tasks', TaskController::class)->except(['show', 'create', 'edit']);
     Route::patch('/tasks/{task}/status', [TaskController::class, 'setStatus'])->name('tasks.status');
+    Route::patch('/tasks/{task}/priority', [TaskController::class, 'setPriority'])->name('tasks.priority');
 });

@@ -14,31 +14,20 @@ class TaskController extends Controller
     {
         $user = auth()->user();
         $isManager = $user->isManager();
-        $filter = $request->get('filter', 'active');
 
-        $query = Task::with(['lead', 'client', 'assigner', 'user']);
-
+        $base = Task::with(['lead', 'client', 'assigner', 'user']);
         if ($isManager && $request->filled('user_id')) {
-            $query->where('user_id', $request->user_id);
+            $base->where('user_id', $request->user_id);
         } elseif (!$isManager) {
-            $query->where('user_id', $user->id);
+            $base->where('user_id', $user->id);
         }
 
-        if ($filter === 'today') {
-            $query->whereIn('status', ['pending', 'in_progress'])->whereDate('due_date', today());
-        } elseif ($filter === 'overdue') {
-            $query->whereIn('status', ['pending', 'in_progress'])->whereDate('due_date', '<', today());
-        } elseif ($filter === 'done') {
-            $query->where('status', 'done');
-        } elseif ($filter === 'all') {
-            // hammasi
-        } else { // active
-            $query->whereIn('status', ['pending', 'in_progress']);
-        }
-
-        $tasks = $query->orderByRaw("CASE priority WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'normal' THEN 3 ELSE 4 END")
+        $tasks = (clone $base)
+            ->orderByRaw("CASE status WHEN 'in_progress' THEN 1 WHEN 'pending' THEN 2 WHEN 'done' THEN 3 ELSE 4 END")
+            ->orderByRaw("CASE priority WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'normal' THEN 3 ELSE 4 END")
             ->orderBy('due_date')
-            ->paginate(20)->withQueryString();
+            ->orderByDesc('id')
+            ->get();
 
         // Bugun aloqa kerak bo'lgan lidlar (avtomatik tasklar)
         $autoTasksQuery = Lead::with('property')->whereDate('next_follow_up', today())->whereNotIn('status', ['won', 'lost']);
@@ -49,55 +38,56 @@ class TaskController extends Controller
         }
         $autoTasks = $autoTasksQuery->orderBy('next_follow_up')->get();
 
-        $counts = $this->counts($user, $isManager, $request->filled('user_id') ? (int) $request->user_id : null);
-        $users = $isManager ? User::where('active', true)->orderBy('name')->get(['id', 'name']) : collect();
-
-        return view('tasks.index', compact('tasks', 'autoTasks', 'filter', 'counts', 'users'));
-    }
-
-    public function create()
-    {
-        $isManager = auth()->user()->isManager();
-        $users = $isManager ? User::where('active', true)->orderBy('name')->get(['id', 'name']) : collect([auth()->user()]);
+        $users = $isManager ? User::where('active', true)->orderBy('name')->get(['id', 'name']) : collect([$user]);
         $leads = Lead::orderBy('name')->get(['id', 'name']);
         $clients = Client::orderBy('name')->get(['id', 'name']);
-        return view('tasks.create', compact('users', 'leads', 'clients'));
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'tasks' => $tasks->map(fn($t) => $this->serialize($t)),
+                'auto_tasks' => $autoTasks->map(fn($l) => $this->serializeLead($l)),
+            ]);
+        }
+
+        return view('tasks.index', compact('tasks', 'autoTasks', 'users', 'leads', 'clients'));
     }
 
     public function store(Request $request)
     {
         $data = $this->validateData($request);
         $data['assigned_by'] = auth()->id();
-
         if (!auth()->user()->isManager()) {
             $data['user_id'] = auth()->id();
         }
 
-        Task::create($data);
-        return redirect()->route('tasks.index')->with('success', 'Task qo\'shildi');
-    }
+        $task = Task::create($data);
+        $task->load(['lead', 'client', 'assigner', 'user']);
 
-    public function edit(Task $task)
-    {
-        $this->checkAccess($task);
-        $isManager = auth()->user()->isManager();
-        $users = $isManager ? User::where('active', true)->orderBy('name')->get(['id', 'name']) : collect([auth()->user()]);
-        $leads = Lead::orderBy('name')->get(['id', 'name']);
-        $clients = Client::orderBy('name')->get(['id', 'name']);
-        return view('tasks.edit', compact('task', 'users', 'leads', 'clients'));
+        if ($request->wantsJson()) {
+            return response()->json(['task' => $this->serialize($task)]);
+        }
+        return redirect()->route('tasks.index')->with('success', 'Task qo\'shildi');
     }
 
     public function update(Request $request, Task $task)
     {
         $this->checkAccess($task);
         $task->update($this->validateData($request));
+        $task->load(['lead', 'client', 'assigner', 'user']);
+
+        if ($request->wantsJson()) {
+            return response()->json(['task' => $this->serialize($task)]);
+        }
         return redirect()->route('tasks.index')->with('success', 'Task yangilandi');
     }
 
-    public function destroy(Task $task)
+    public function destroy(Request $request, Task $task)
     {
         $this->checkAccess($task, true);
         $task->delete();
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true]);
+        }
         return back()->with('success', 'Task o\'chirildi');
     }
 
@@ -105,6 +95,7 @@ class TaskController extends Controller
     {
         $this->checkAccess($task);
         $request->validate(['status' => 'required|in:' . implode(',', array_keys(Task::STATUSES))]);
+
         $update = ['status' => $request->status];
         if ($request->status === 'done') {
             $update['completed_at'] = now();
@@ -112,23 +103,25 @@ class TaskController extends Controller
             $update['completed_at'] = null;
         }
         $task->update($update);
+        $task->load(['lead', 'client', 'assigner', 'user']);
+
+        if ($request->wantsJson()) {
+            return response()->json(['task' => $this->serialize($task)]);
+        }
         return back()->with('success', 'Task statusi yangilandi');
     }
 
-    private function counts(User $user, bool $isManager, ?int $userId): array
+    public function setPriority(Request $request, Task $task)
     {
-        $base = Task::query();
-        if (!$isManager) {
-            $base->where('user_id', $user->id);
-        } elseif ($userId) {
-            $base->where('user_id', $userId);
+        $this->checkAccess($task);
+        $request->validate(['priority' => 'required|in:' . implode(',', array_keys(Task::PRIORITIES))]);
+        $task->update(['priority' => $request->priority]);
+        $task->load(['lead', 'client', 'assigner', 'user']);
+
+        if ($request->wantsJson()) {
+            return response()->json(['task' => $this->serialize($task)]);
         }
-        return [
-            'active' => (clone $base)->whereIn('status', ['pending', 'in_progress'])->count(),
-            'today' => (clone $base)->whereIn('status', ['pending', 'in_progress'])->whereDate('due_date', today())->count(),
-            'overdue' => (clone $base)->whereIn('status', ['pending', 'in_progress'])->whereDate('due_date', '<', today())->count(),
-            'done' => (clone $base)->where('status', 'done')->count(),
-        ];
+        return back()->with('success', 'Prioritet o\'zgartirildi');
     }
 
     private function checkAccess(Task $task, bool $forDelete = false): void
@@ -153,5 +146,49 @@ class TaskController extends Controller
             'priority' => 'required|in:' . implode(',', array_keys(Task::PRIORITIES)),
             'status' => 'required|in:' . implode(',', array_keys(Task::STATUSES)),
         ]);
+    }
+
+    private function serialize(Task $t): array
+    {
+        return [
+            'id' => $t->id,
+            'title' => $t->title,
+            'description' => $t->description,
+            'user_id' => $t->user_id,
+            'user_name' => $t->user?->name,
+            'assigner_name' => $t->assigner?->name,
+            'assigned_by' => $t->assigned_by,
+            'lead_id' => $t->lead_id,
+            'lead_name' => $t->lead?->name,
+            'client_id' => $t->client_id,
+            'client_name' => $t->client?->name,
+            'due_date' => $t->due_date?->format('Y-m-d'),
+            'due_date_human' => $t->due_date?->format('d.m.Y'),
+            'priority' => $t->priority,
+            'priority_label' => $t->priorityLabel(),
+            'priority_color' => $t->priorityColor(),
+            'status' => $t->status,
+            'status_label' => $t->statusLabel(),
+            'status_color' => $t->statusColor(),
+            'is_overdue' => $t->isOverdue(),
+            'completed_at' => $t->completed_at?->toIso8601String(),
+            'created_at' => $t->created_at->toIso8601String(),
+        ];
+    }
+
+    private function serializeLead(Lead $l): array
+    {
+        return [
+            'id' => $l->id,
+            'name' => $l->name,
+            'phone' => $l->phone,
+            'phone_clean' => preg_replace('/\s+/', '', $l->phone ?? ''),
+            'status' => $l->status,
+            'status_label' => $l->statusLabel(),
+            'budget' => $l->budget,
+            'rooms_wanted' => $l->rooms_wanted,
+            'payment_method' => $l->payment_method,
+            'payment_label' => Lead::PAYMENT_METHODS[$l->payment_method] ?? null,
+        ];
     }
 }
