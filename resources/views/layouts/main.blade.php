@@ -7,83 +7,97 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .sidebar-link { @apply flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-2xl transition-all duration-300; }
-        .sidebar-link.active { @apply bg-slate-800 text-white shadow-2xl; }
-        .sidebar { @apply fixed inset-y-0 left-0 z-40 w-72 bg-slate-950/95 backdrop-blur-xl border-r border-white/10 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out; }
-        .sidebar.open { @apply translate-x-0; }
-        .overlay { @apply fixed inset-0 bg-black bg-opacity-40 z-30 hidden md:hidden; }
-        .overlay.show { @apply block; }
+        .sidebar.open { transform: translateX(0) !important; }
+        .overlay.show { display: block !important; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen">
-    <button id="menuToggle" class="md:hidden fixed top-4 left-4 z-50 bg-slate-950 text-white p-3 rounded-2xl shadow-2xl">
+<body class="bg-slate-100 min-h-screen text-slate-900">
+    <button id="menuToggle" class="md:hidden fixed top-4 left-4 z-50 bg-slate-950 text-white p-3 rounded-2xl shadow-2xl ring-2 ring-slate-900/10">
         <i class="fas fa-bars"></i>
     </button>
 
-    <div id="overlay" class="overlay"></div>
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-40 z-30 hidden md:hidden"></div>
 
-    <aside id="sidebar" class="sidebar px-6 py-8">
-        <div class="mb-8">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="inline-flex items-center justify-center w-12 h-12 rounded-3xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-xl">
-                    <i class="fas fa-building"></i>
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-full max-w-[280px] md:w-72 bg-slate-950/95 backdrop-blur-xl border-r border-white/10 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto">
+        <div class="flex min-h-full flex-col px-6 py-8">
+            <div class="mb-8">
+                <div class="flex items-center gap-3 mb-5">
+                    <div class="inline-flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-xl">
+                        <i class="fas fa-building text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-semibold text-white">CRM Uy</h1>
+                        <p class="text-slate-400 text-sm">Uy sotish boshqaruvi</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-xl font-semibold text-white">CRM Uy</h1>
-                    <p class="text-slate-400 text-sm">Uy sotish boshqaruvi</p>
-                </div>
-            </div>
-            <div class="rounded-3xl bg-slate-900/80 p-4 border border-white/10 shadow-xl">
-                <p class="text-slate-400 text-xs uppercase tracking-[0.2em] mb-3">Tez kirish</p>
-                <div class="grid gap-3">
-                    <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->is('dashboard') ? 'active' : '' }}">
-                        <i class="fas fa-chart-simple w-5"></i> Dashboard
-                    </a>
-                    <a href="{{ route('investors.index') }}" class="sidebar-link {{ request()->is('investors*') ? 'active' : '' }}">
-                        <i class="fas fa-user-tie w-5"></i> Investorlar
-                    </a>
-                    <a href="{{ route('properties.index') }}" class="sidebar-link {{ request()->is('properties*') ? 'active' : '' }}">
-                        <i class="fas fa-building w-5"></i> Uylar
-                    </a>
-                    <a href="{{ route('clients.index') }}" class="sidebar-link {{ request()->is('clients*') ? 'active' : '' }}">
-                        <i class="fas fa-users w-5"></i> Mijozlar
-                    </a>
-                    <a href="{{ route('sales.index') }}" class="sidebar-link {{ request()->is('sales*') ? 'active' : '' }}">
-                        <i class="fas fa-handshake w-5"></i> Savdolar
-                    </a>
+                <div class="rounded-3xl bg-slate-900/90 p-5 border border-white/10 shadow-2xl">
+                    <p class="text-slate-400 text-xs uppercase tracking-[0.25em] mb-4">Tezkor Ko‘rsatkich</p>
+                    <div class="space-y-3">
+                        <div class="rounded-3xl bg-slate-950 p-4">
+                            <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Bugun yangi</p>
+                            <p class="text-xl font-semibold text-white">12 ta</p>
+                        </div>
+                        <div class="rounded-3xl bg-slate-950 p-4">
+                            <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Oylik hosil</p>
+                            <p class="text-xl font-semibold text-white">2.5M UZS</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="mt-auto text-slate-400 text-sm">
-            <p class="mb-2">CRM Uy v1.0</p>
-            <p>Sodda, tezkor va ma'lumotlar boshqaruvi uchun mos.</p>
+
+            <nav class="space-y-2 mb-8">
+                <div class="text-xs uppercase tracking-[0.3em] text-slate-500 mb-3">Bo‘limlar</div>
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 rounded-3xl px-4 py-3 text-slate-200 hover:bg-slate-800 hover:text-white transition {{ request()->is('dashboard') ? 'bg-slate-800 text-white shadow-2xl' : '' }}">
+                    <i class="fas fa-chart-line w-5"></i>
+                    Dashboard
+                </a>
+                <a href="{{ route('investors.index') }}" class="flex items-center gap-3 rounded-3xl px-4 py-3 text-slate-200 hover:bg-slate-800 hover:text-white transition {{ request()->is('investors*') ? 'bg-slate-800 text-white shadow-2xl' : '' }}">
+                    <i class="fas fa-user-tie w-5"></i>
+                    Investorlar
+                </a>
+                <a href="{{ route('properties.index') }}" class="flex items-center gap-3 rounded-3xl px-4 py-3 text-slate-200 hover:bg-slate-800 hover:text-white transition {{ request()->is('properties*') ? 'bg-slate-800 text-white shadow-2xl' : '' }}">
+                    <i class="fas fa-building w-5"></i>
+                    Uylar
+                </a>
+                <a href="{{ route('clients.index') }}" class="flex items-center gap-3 rounded-3xl px-4 py-3 text-slate-200 hover:bg-slate-800 hover:text-white transition {{ request()->is('clients*') ? 'bg-slate-800 text-white shadow-2xl' : '' }}">
+                    <i class="fas fa-users w-5"></i>
+                    Mijozlar
+                </a>
+                <a href="{{ route('sales.index') }}" class="flex items-center gap-3 rounded-3xl px-4 py-3 text-slate-200 hover:bg-slate-800 hover:text-white transition {{ request()->is('sales*') ? 'bg-slate-800 text-white shadow-2xl' : '' }}">
+                    <i class="fas fa-handshake w-5"></i>
+                    Savdolar
+                </a>
+            </nav>
+
+            <div class="mt-auto rounded-3xl bg-slate-900/90 p-5 border border-white/10 shadow-2xl text-slate-300">
+                <p class="text-xs uppercase tracking-[0.25em] mb-2 text-slate-500">Ish jarayoni</p>
+                <p class="text-sm leading-6">CRM interfeysi hozirgi savdo va mijoz monitoringini chiroyli tarzda taqdim etadi. Har bir bo‘limni tezda kuzating.</p>
+            </div>
         </div>
     </aside>
 
     <main class="md:ml-72 flex-1 p-4 md:p-8">
-        <header class="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-                <p class="text-sm text-slate-500">Xush kelibsiz, @auth{{ auth()->user()->name }}@endauth</p>
-                <h2 class="text-3xl font-bold text-slate-900">@yield('title', 'Dashboard')</h2>
-            </div>
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <a href="{{ route('investors.index') }}" class="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-slate-700 shadow-sm border border-slate-200 hover:bg-slate-50 transition">
-                    <i class="fas fa-user-plus text-cyan-500"></i>
-                    <span>Investor</span>
-                </a>
-                <form action="{{ route('logout') }}" method="POST" class="inline">
-                    @csrf
-                    <button type="submit" class="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-white shadow-sm hover:bg-slate-800 transition">
-                        <i class="fas fa-right-from-bracket"></i>
-                        <span>Chiqish</span>
+        <div class="sticky top-0 z-20 mb-6 rounded-[2rem] bg-white/95 backdrop-blur border border-slate-200 shadow-sm px-5 py-5">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                    <p class="text-sm text-slate-500">Xush kelibsiz, @auth{{ auth()->user()->name }}@endauth</p>
+                    <h2 class="text-3xl font-bold text-slate-900">@yield('title', 'Dashboard')</h2>
+                </div>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div class="relative w-full sm:w-72">
+                        <span class="absolute inset-y-0 left-4 flex items-center text-slate-400"><i class="fas fa-search"></i></span>
+                        <input type="search" placeholder="Qidiruv..." class="w-full rounded-3xl border border-slate-200 bg-slate-50 py-3 pl-12 pr-4 text-sm text-slate-700 outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100" />
+                    </div>
+                    <button class="inline-flex items-center gap-2 rounded-3xl bg-slate-950 px-5 py-3 text-white shadow-lg hover:bg-slate-800 transition">
+                        <i class="fas fa-bell"></i>
+                        Bildirishnomalar
                     </button>
-                </form>
+                </div>
             </div>
-        </header>
+        </div>
 
         @if(session('success'))
-            <div class="bg-white border border-emerald-200 text-slate-800 px-6 py-4 rounded-3xl shadow-sm mb-6">
+            <div class="mb-6 rounded-3xl border border-emerald-200 bg-white px-6 py-4 text-slate-800 shadow-sm">
                 <i class="fas fa-check-circle text-emerald-500 mr-2"></i>
                 {{ session('success') }}
             </div>

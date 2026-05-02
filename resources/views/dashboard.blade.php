@@ -3,7 +3,7 @@
 @section('title', 'Dashboard')
 
 @section('content')
-<div class="grid gap-6 lg:grid-cols-2 xl:grid-cols-4 mb-8">
+<div class="grid gap-6 xl:grid-cols-4 mb-8">
     <div class="rounded-3xl bg-white p-6 shadow-lg border border-slate-200 hover:shadow-xl transition">
         <div class="flex items-center justify-between mb-4">
             <div>
@@ -102,10 +102,64 @@
     <div class="rounded-3xl bg-white p-6 shadow-lg border border-slate-200">
         <div class="flex items-center justify-between mb-5">
             <div>
-                <h3 class="text-lg font-semibold text-slate-900">So‘nggi savdolar</h3>
+                <h3 class="text-xl font-semibold text-slate-900">Daromad va natijalar</h3>
+                <p class="text-sm text-slate-500">So‘nggi savdo faoliyati.</p>
+            </div>
+            <span class="rounded-3xl bg-slate-100 px-3 py-2 text-sm text-slate-600">Yangi</span>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-3 mb-6">
+            <div class="rounded-3xl bg-slate-50 p-4 border border-slate-200">
+                <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Bo‘sh uylar</p>
+                <p class="mt-3 text-3xl font-semibold text-emerald-700">{{ $stats['free'] }}</p>
+            </div>
+            <div class="rounded-3xl bg-slate-50 p-4 border border-slate-200">
+                <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Sotilgan uylar</p>
+                <p class="mt-3 text-3xl font-semibold text-slate-900">{{ $stats['sold'] }}</p>
+            </div>
+            <div class="rounded-3xl bg-slate-50 p-4 border border-slate-200">
+                <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Ijara uylar</p>
+                <p class="mt-3 text-3xl font-semibold text-orange-700">{{ $stats['rent'] }}</p>
+            </div>
+        </div>
+        <div class="space-y-4">
+            @php $totalProps = max($stats['properties'] ?? 1, 1); @endphp
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-sm text-slate-500">Bo‘sh hovuz</p>
+                    <p class="text-sm font-semibold text-slate-900">{{ round($stats['free'] / $totalProps * 100) }}%</p>
+                </div>
+                <div class="h-3 w-full overflow-hidden rounded-full bg-slate-200">
+                    <div class="h-full rounded-full bg-emerald-500" style="width: {{ round($stats['free'] / $totalProps * 100) }}%"></div>
+                </div>
+            </div>
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-sm text-slate-500">Sotilgan</p>
+                    <p class="text-sm font-semibold text-slate-900">{{ round($stats['sold'] / $totalProps * 100) }}%</p>
+                </div>
+                <div class="h-3 w-full overflow-hidden rounded-full bg-slate-200">
+                    <div class="h-full rounded-full bg-blue-500" style="width: {{ round($stats['sold'] / $totalProps * 100) }}%"></div>
+                </div>
+            </div>
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-sm text-slate-500">Ijara</p>
+                    <p class="text-sm font-semibold text-slate-900">{{ round($stats['rent'] / $totalProps * 100) }}%</p>
+                </div>
+                <div class="h-3 w-full overflow-hidden rounded-full bg-slate-200">
+                    <div class="h-full rounded-full bg-orange-500" style="width: {{ round($stats['rent'] / $totalProps * 100) }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="rounded-3xl bg-white p-6 shadow-lg border border-slate-200">
+        <div class="flex items-center justify-between mb-5">
+            <div>
+                <h3 class="text-xl font-semibold text-slate-900">So‘nggi savdolar</h3>
                 <p class="text-sm text-slate-500">Eng so‘nggi 5 ta savdo yozuvi.</p>
             </div>
-            <span class="rounded-2xl bg-slate-100 px-3 py-2 text-sm text-slate-600">Yangi</span>
+            <span class="rounded-3xl bg-slate-100 px-3 py-2 text-sm text-slate-600">Tahlil</span>
         </div>
         @if($stats['recent_sales']->isEmpty())
             <p class="text-slate-500">Hali savdo yo‘q.</p>
@@ -113,40 +167,55 @@
             <div class="space-y-4">
                 @foreach($stats['recent_sales'] as $sale)
                     <div class="rounded-3xl bg-slate-50 p-4 border border-slate-200">
-                        <div class="flex items-center justify-between gap-4">
+                        <div class="flex items-start justify-between gap-4">
                             <div>
-                                <p class="text-slate-900 font-semibold">{{ $sale->property->title ?? 'Nomaʼlum uy' }}</p>
-                                <p class="text-sm text-slate-500">{{ $sale->client->name ?? 'Nomaʼlum mijoz' }}</p>
+                                <p class="text-base font-semibold text-slate-900">{{ $sale->property->title ?? 'Nomaʼlum uy' }}</p>
+                                <p class="text-sm text-slate-500 mt-1">{{ $sale->client->name ?? 'Nomaʼlum mijoz' }}</p>
                             </div>
-                            <p class="text-slate-900 font-semibold">{{ number_format($sale->price, 0, ',', ' ') }} UZS</p>
+                            <span class="rounded-2xl bg-slate-100 px-3 py-1 text-sm text-slate-600">{{ ucfirst($sale->type) }}</span>
                         </div>
-                        <div class="mt-3 flex flex-wrap items-center gap-3 text-sm text-slate-500">
+                        <div class="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-500">
                             <span><i class="fas fa-calendar-alt mr-2"></i>{{ $sale->sale_date?->format('d.m.Y') ?? '---' }}</span>
-                            <span><i class="fas fa-tag mr-2"></i>{{ ucfirst($sale->type) ?? 'Savdo' }}</span>
+                            <span><i class="fas fa-money-bill-wave mr-2"></i>{{ number_format($sale->price, 0, ',', ' ') }} UZS</span>
                         </div>
                     </div>
                 @endforeach
             </div>
         @endif
     </div>
+</div>
 
-    <div class="rounded-3xl bg-white p-6 shadow-lg border border-slate-200">
-        <div class="mb-5">
-            <h3 class="text-lg font-semibold text-slate-900">Faol uylar holati</h3>
-            <p class="text-sm text-slate-500">Uylar bo‘yicha tezkor holat.</p>
+<div class="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-6 text-white shadow-2xl border border-slate-800">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+            <h3 class="text-xl font-semibold">So‘nggi oylik trend</h3>
+            <p class="mt-2 text-sm text-slate-300">Oylik ishlab chiqarish va savdo ko‘rsatkichlarini kuzatish.</p>
         </div>
-        <div class="grid gap-4 sm:grid-cols-3">
-            <div class="rounded-3xl bg-slate-50 p-4 border border-slate-200 text-center">
-                <p class="text-sm text-slate-500">Bo‘sh</p>
-                <p class="mt-3 text-2xl font-semibold text-emerald-700">{{ $stats['free'] }}</p>
+        <div class="inline-flex items-center gap-2 rounded-3xl bg-slate-900/60 px-4 py-3 text-sm text-slate-300">
+            <i class="fas fa-arrow-up text-emerald-400"></i>
+            <span>Kutilgan daromad +24%</span>
+        </div>
+    </div>
+    <div class="mt-8 grid gap-4 sm:grid-cols-3">
+        <div class="space-y-3 rounded-3xl bg-slate-950/80 p-4">
+            <p class="text-sm text-slate-400">Investorlar o‘sishi</p>
+            <p class="text-3xl font-semibold text-white">{{ $stats['investors'] }}</p>
+            <div class="h-2 rounded-full bg-slate-800">
+                <div class="h-full rounded-full bg-cyan-500" style="width: 72%"></div>
             </div>
-            <div class="rounded-3xl bg-slate-50 p-4 border border-slate-200 text-center">
-                <p class="text-sm text-slate-500">Sotilgan</p>
-                <p class="mt-3 text-2xl font-semibold text-blue-700">{{ $stats['sold'] }}</p>
+        </div>
+        <div class="space-y-3 rounded-3xl bg-slate-950/80 p-4">
+            <p class="text-sm text-slate-400">Uy portfeli</p>
+            <p class="text-3xl font-semibold text-white">{{ $stats['properties'] }}</p>
+            <div class="h-2 rounded-full bg-slate-800">
+                <div class="h-full rounded-full bg-emerald-500" style="width: 62%"></div>
             </div>
-            <div class="rounded-3xl bg-slate-50 p-4 border border-slate-200 text-center">
-                <p class="text-sm text-slate-500">Ijara</p>
-                <p class="mt-3 text-2xl font-semibold text-orange-700">{{ $stats['rent'] }}</p>
+        </div>
+        <div class="space-y-3 rounded-3xl bg-slate-950/80 p-4">
+            <p class="text-sm text-slate-400">Savdolar soni</p>
+            <p class="text-3xl font-semibold text-white">{{ $stats['sales'] }}</p>
+            <div class="h-2 rounded-full bg-slate-800">
+                <div class="h-full rounded-full bg-orange-500" style="width: 83%"></div>
             </div>
         </div>
     </div>
