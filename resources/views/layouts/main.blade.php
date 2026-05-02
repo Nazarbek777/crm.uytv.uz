@@ -9,87 +9,88 @@
     <style>
         .sidebar.open { transform: translateX(0) !important; }
         .overlay.show { display: block !important; }
+        .nav-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.875rem; border-radius: 0.75rem; font-size: 0.875rem; color: rgb(203 213 225); transition: all 150ms; }
+        .nav-link:hover { background: rgb(30 41 59); color: white; }
+        .nav-link.active { background: rgb(30 41 59); color: white; box-shadow: inset 3px 0 0 rgb(34 211 238); }
+        .nav-link i { width: 1.125rem; text-align: center; font-size: 0.875rem; opacity: 0.85; }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-900">
-    <button id="menuToggle" class="md:hidden fixed top-4 left-4 z-50 bg-slate-950 text-white p-3 rounded-2xl shadow-2xl ring-2 ring-slate-900/10">
+    <button id="menuToggle" class="md:hidden fixed top-4 left-4 z-50 bg-slate-950 text-white p-2.5 rounded-xl shadow-lg">
         <i class="fas fa-bars"></i>
     </button>
 
-    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-40 z-30 hidden md:hidden"></div>
+    <div id="overlay" class="fixed inset-0 bg-black/40 z-30 hidden md:hidden"></div>
 
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-full max-w-[240px] md:w-64 bg-slate-950/95 backdrop-blur-xl border-r border-white/10 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto">
-        <div class="flex min-h-full flex-col px-4 py-6">
-            <div class="mb-6">
-                <div class="flex items-center gap-3">
-                    <div class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-xl">
-                        <i class="fas fa-building text-sm"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-base font-semibold text-white">CRM Uy</h1>
-                        <p class="text-slate-400 text-xs">Uy sotish boshqaruvi</p>
-                    </div>
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-60 bg-slate-950 border-r border-slate-800 transform -translate-x-full md:translate-x-0 transition-transform duration-300 overflow-y-auto">
+        <div class="flex min-h-full flex-col px-3 py-5">
+            <div class="px-2 mb-6 flex items-center gap-3">
+                <div class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-lg">
+                    <i class="fas fa-building text-sm"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm font-semibold text-white leading-tight">CRM Uy</h1>
+                    <p class="text-slate-500 text-[11px]">Uy sotish boshqaruvi</p>
                 </div>
             </div>
 
-            <nav class="space-y-2 mb-8">
-                <div class="text-[10px] uppercase tracking-[0.35em] text-slate-500 mb-3">Bo‘limlar</div>
-                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 rounded-3xl px-3 py-3 text-sm text-slate-200 hover:bg-slate-800 hover:text-white transition {{ request()->is('dashboard') ? 'bg-slate-800 text-white shadow-2xl border-l-4 border-cyan-400' : '' }}">
-                    <i class="fas fa-chart-line w-4"></i>
-                    Dashboard
+            <nav class="space-y-1 flex-1">
+                <a href="{{ route('dashboard') }}" class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}">
+                    <i class="fas fa-chart-line"></i> Dashboard
                 </a>
-                <a href="{{ route('mortgage.calculator') }}" class="flex items-center gap-3 rounded-3xl px-3 py-3 text-sm text-slate-200 hover:bg-slate-800 hover:text-white transition {{ request()->is('mortgage-calculator') ? 'bg-slate-800 text-white shadow-2xl border-l-4 border-cyan-400' : '' }}">
-                    <i class="fas fa-calculator w-4"></i>
-                    Ipoteka Kalkulyatori
+                <a href="{{ route('properties.index') }}" class="nav-link {{ request()->is('properties*') ? 'active' : '' }}">
+                    <i class="fas fa-building"></i> Uylar
                 </a>
-                <a href="{{ route('investors.index') }}" class="flex items-center gap-3 rounded-3xl px-3 py-3 text-sm text-slate-200 hover:bg-slate-800 hover:text-white transition {{ request()->is('investors*') ? 'bg-slate-800 text-white shadow-2xl border-l-4 border-cyan-400' : '' }}">
-                    <i class="fas fa-user-tie w-4"></i>
-                    Investorlar
+                <a href="{{ route('clients.index') }}" class="nav-link {{ request()->is('clients*') ? 'active' : '' }}">
+                    <i class="fas fa-users"></i> Mijozlar
                 </a>
-                <a href="{{ route('properties.index') }}" class="flex items-center gap-3 rounded-3xl px-3 py-3 text-sm text-slate-200 hover:bg-slate-800 hover:text-white transition {{ request()->is('properties*') ? 'bg-slate-800 text-white shadow-2xl border-l-4 border-cyan-400' : '' }}">
-                    <i class="fas fa-building w-4"></i>
-                    Uylar
+                <a href="{{ route('sales.index') }}" class="nav-link {{ request()->is('sales*') ? 'active' : '' }}">
+                    <i class="fas fa-handshake"></i> Savdolar
                 </a>
-                <a href="{{ route('clients.index') }}" class="flex items-center gap-3 rounded-3xl px-3 py-3 text-sm text-slate-200 hover:bg-slate-800 hover:text-white transition {{ request()->is('clients*') ? 'bg-slate-800 text-white shadow-2xl border-l-4 border-cyan-400' : '' }}">
-                    <i class="fas fa-users w-4"></i>
-                    Mijozlar
+                <a href="{{ route('investors.index') }}" class="nav-link {{ request()->is('investors*') ? 'active' : '' }}">
+                    <i class="fas fa-user-tie"></i> Investorlar
                 </a>
-                <a href="{{ route('sales.index') }}" class="flex items-center gap-3 rounded-3xl px-3 py-3 text-sm text-slate-200 hover:bg-slate-800 hover:text-white transition {{ request()->is('sales*') ? 'bg-slate-800 text-white shadow-2xl border-l-4 border-cyan-400' : '' }}">
-                    <i class="fas fa-handshake w-4"></i>
-                    Savdolar
+                <a href="{{ route('mortgage.calculator') }}" class="nav-link {{ request()->is('mortgage-calculator') ? 'active' : '' }}">
+                    <i class="fas fa-calculator"></i> Kalkulyator
                 </a>
             </nav>
 
-            <div class="mt-auto rounded-3xl bg-slate-900/90 p-5 border border-white/10 shadow-2xl text-slate-300">
-                <p class="text-xs uppercase tracking-[0.25em] mb-2 text-slate-500">Ish jarayoni</p>
-                <p class="text-sm leading-6">CRM interfeysi hozirgi savdo va mijoz monitoringini chiroyli tarzda taqdim etadi. Har bir bo‘limni tezda kuzating.</p>
+            @auth
+            <div class="mt-4 pt-4 border-t border-slate-800">
+                <div class="flex items-center gap-3 px-2 py-2">
+                    <div class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-800 text-slate-300 text-sm font-semibold">
+                        {{ strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm text-white truncate">{{ auth()->user()->name }}</p>
+                        <p class="text-[11px] text-slate-500 truncate">{{ auth()->user()->email }}</p>
+                    </div>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" title="Chiqish" class="text-slate-400 hover:text-red-400 transition p-2">
+                            <i class="fas fa-right-from-bracket"></i>
+                        </button>
+                    </form>
+                </div>
             </div>
+            @endauth
         </div>
     </aside>
 
-    <main class="md:ml-72 flex-1 p-4 md:p-8">
-        <div class="sticky top-0 z-20 mb-6 rounded-[2rem] bg-white/95 backdrop-blur border border-slate-200 shadow-sm px-5 py-5">
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                    <p class="text-sm text-slate-500">Xush kelibsiz, @auth{{ auth()->user()->name }}@endauth</p>
-                    <h2 class="text-3xl font-bold text-slate-900">@yield('title', 'Dashboard')</h2>
-                </div>
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <div class="relative w-full sm:w-72">
-                        <span class="absolute inset-y-0 left-4 flex items-center text-slate-400"><i class="fas fa-search"></i></span>
-                        <input type="search" placeholder="Qidiruv..." class="w-full rounded-3xl border border-slate-200 bg-slate-50 py-3 pl-12 pr-4 text-sm text-slate-700 outline-none transition focus:border-cyan-300 focus:ring-4 focus:ring-cyan-100" />
-                    </div>
-                    <button class="inline-flex items-center gap-2 rounded-3xl bg-slate-950 px-5 py-3 text-white shadow-lg hover:bg-slate-800 transition">
-                        <i class="fas fa-bell"></i>
-                        Bildirishnomalar
-                    </button>
-                </div>
+    <main class="md:ml-60 p-4 md:p-6">
+        <div class="mb-5 flex items-center justify-between gap-4">
+            <div class="md:pl-0 pl-12">
+                <h2 class="text-2xl font-bold text-slate-900">@yield('title', 'Dashboard')</h2>
+                @auth<p class="text-xs text-slate-500 mt-0.5">Salom, {{ auth()->user()->name }}</p>@endauth
+            </div>
+            <div class="flex items-center gap-2">
+                @yield('actions')
             </div>
         </div>
 
         @if(session('success'))
-            <div class="mb-6 rounded-3xl border border-emerald-200 bg-white px-6 py-4 text-slate-800 shadow-sm">
-                <i class="fas fa-check-circle text-emerald-500 mr-2"></i>
+            <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 flex items-center gap-2">
+                <i class="fas fa-check-circle text-emerald-500"></i>
                 {{ session('success') }}
             </div>
         @endif
@@ -101,12 +102,10 @@
         const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
-
         menuToggle.addEventListener('click', () => {
             sidebar.classList.toggle('open');
             overlay.classList.toggle('show');
         });
-
         overlay.addEventListener('click', () => {
             sidebar.classList.remove('open');
             overlay.classList.remove('show');

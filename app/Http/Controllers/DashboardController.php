@@ -12,15 +12,9 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $avgPrice = Property::count() ? Property::avg('price') : 0;
         $totalSales = Sale::count();
-        $monthlyInterestRate = 0.12 / 12;
-        $termMonths = 20 * 12;
-        $loanAmount = $avgPrice * 0.7;
-
-        $monthlyMortgage = $loanAmount && $termMonths
-            ? round($loanAmount * ($monthlyInterestRate * pow(1 + $monthlyInterestRate, $termMonths)) / (pow(1 + $monthlyInterestRate, $termMonths) - 1))
-            : 0;
+        $monthlyTrend = $this->monthlyTrend(6);
+        $thisMonthIncome = Sale::whereMonth('sale_date', now()->month)->whereYear('sale_date', now()->year)->sum('price');
 
         $stats = [
             'investors' => Investor::count(),
@@ -31,20 +25,35 @@ class DashboardController extends Controller
             'clients' => Client::count(),
             'sales' => $totalSales,
             'total_income' => Sale::sum('price'),
+            'monthly_income' => $thisMonthIncome,
             'average_sale' => $totalSales ? round(Sale::avg('price')) : 0,
             'active_investors' => Investor::whereHas('properties')->count(),
-            'min_price' => Property::count() ? Property::min('price') : 0,
-            'max_price' => Property::count() ? Property::max('price') : 0,
-            'avg_price' => round($avgPrice),
-            'down_payment' => round($avgPrice * 0.3),
-            'monthly_mortgage' => $monthlyMortgage,
-            'mortgage_rate' => 12,
-            'recent_sales' => Sale::with(['client', 'property'])->latest()->limit(5)->get(),
-            'monthly_sales' => Sale::whereMonth('created_at', now()->month)->count(),
+            'monthly_sales' => Sale::whereMonth('sale_date', now()->month)->whereYear('sale_date', now()->year)->count(),
             'quarterly_growth' => $this->calculateQuarterlyGrowth(),
+            'recent_sales' => Sale::with(['client', 'property'])->latest('sale_date')->limit(6)->get(),
+            'top_investors' => Investor::withCount('properties')->orderByDesc('properties_count')->limit(5)->get(),
+            'chart_months' => $monthlyTrend['labels'],
+            'chart_sales' => $monthlyTrend['sales_count'],
+            'chart_income' => $monthlyTrend['income'],
         ];
 
         return view('dashboard', compact('stats'));
+    }
+
+    private function monthlyTrend(int $monthsBack)
+    {
+        $labels = [];
+        $salesCount = [];
+        $income = [];
+        $monthNames = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyn', 'Iyl', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'];
+        for ($i = $monthsBack - 1; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $labels[] = $monthNames[$date->month - 1];
+            $rows = Sale::whereMonth('sale_date', $date->month)->whereYear('sale_date', $date->year);
+            $salesCount[] = (clone $rows)->count();
+            $income[] = (float) (clone $rows)->sum('price');
+        }
+        return ['labels' => $labels, 'sales_count' => $salesCount, 'income' => $income];
     }
 
     public function mortgageCalculator()
