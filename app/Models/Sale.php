@@ -13,6 +13,7 @@ class Sale extends Model
     protected $fillable = [
         'property_id',
         'client_id',
+        'operator_id',
         'price',
         'type',
         'sale_date',
@@ -32,5 +33,10 @@ class Sale extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function operator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'operator_id');
     }
 }

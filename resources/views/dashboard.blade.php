@@ -99,6 +99,52 @@
 </div>
 
 <div class="grid gap-4 lg:grid-cols-3 mb-5">
+    <div class="lg:col-span-2 rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-5 pt-4 pb-3 flex items-center justify-between border-b border-slate-100">
+            <h3 class="text-base font-semibold text-slate-900">Lid pipeline</h3>
+            <a href="{{ route('leads.index') }}" class="text-xs text-cyan-600 hover:text-cyan-700">Hammasi</a>
+        </div>
+        <div class="grid grid-cols-3 sm:grid-cols-6 divide-x divide-slate-100">
+            @foreach(\App\Models\Lead::STATUSES as $key => $info)
+                @php
+                    $count = $stats['leads_by_status'][$key] ?? 0;
+                    $colorMap = [
+                        'slate' => 'text-slate-700', 'blue' => 'text-blue-700', 'cyan' => 'text-cyan-700',
+                        'amber' => 'text-amber-700', 'emerald' => 'text-emerald-700', 'red' => 'text-red-700',
+                    ];
+                @endphp
+                <a href="{{ route('leads.index', ['view' => 'list', 'status' => $key]) }}" class="px-3 py-4 text-center hover:bg-slate-50 transition">
+                    <p class="text-[10px] uppercase tracking-wider text-slate-500 truncate">{{ $info['label'] }}</p>
+                    <p class="mt-1 text-2xl font-bold {{ $colorMap[$info['color']] ?? 'text-slate-700' }}">{{ $count }}</p>
+                </a>
+            @endforeach
+        </div>
+    </div>
+    <div class="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-5 pt-4 pb-3 flex items-center justify-between border-b border-slate-100">
+            <h3 class="text-base font-semibold text-slate-900">Bugungi eslatmalar</h3>
+            <a href="{{ route('reminders.index', ['filter' => 'today']) }}" class="text-xs text-cyan-600 hover:text-cyan-700">Hammasi</a>
+        </div>
+        @if($stats['today_reminders']->isEmpty())
+            <p class="px-5 py-6 text-center text-sm text-slate-500"><i class="fas fa-bell-slash mb-1 block text-xl text-slate-300"></i>Eslatma yo'q</p>
+        @else
+            <div class="divide-y divide-slate-100 max-h-[200px] overflow-y-auto">
+                @foreach($stats['today_reminders'] as $r)
+                    @php $isOverdue = $r->remind_at->isPast(); @endphp
+                    <a href="{{ route('reminders.edit', $r) }}" class="flex items-start gap-2 px-4 py-2.5 hover:bg-slate-50">
+                        <span class="mt-1 inline-block w-2 h-2 rounded-full {{ $isOverdue ? 'bg-red-500' : 'bg-cyan-500' }}"></span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-slate-900 truncate">{{ $r->title }}</p>
+                            <p class="text-[11px] {{ $isOverdue ? 'text-red-500 font-semibold' : 'text-slate-500' }}">{{ $r->remind_at->format('H:i') }} · {{ $r->remind_at->diffForHumans() }}</p>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        @endif
+    </div>
+</div>
+
+<div class="grid gap-4 lg:grid-cols-3 mb-5">
     <div class="lg:col-span-2 rounded-2xl bg-white p-5 border border-slate-200 shadow-sm">
         <div class="flex items-center justify-between mb-4">
             <div>
@@ -191,8 +237,14 @@
 
 <div class="rounded-2xl bg-white p-5 border border-slate-200 shadow-sm">
     <h3 class="text-base font-semibold text-slate-900 mb-3">Tezkor amallar</h3>
-    <div class="grid gap-2 sm:grid-cols-2 md:grid-cols-5">
-        <a href="{{ route('properties.index') }}" class="flex items-center gap-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-4 py-3 text-sm font-medium transition">
+    <div class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        <a href="{{ route('leads.create') }}" class="flex items-center gap-2 rounded-xl bg-cyan-50 hover:bg-cyan-100 text-cyan-700 px-4 py-3 text-sm font-medium transition">
+            <i class="fas fa-plus text-xs"></i> Yangi lid
+        </a>
+        <a href="{{ route('reminders.create') }}" class="flex items-center gap-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 px-4 py-3 text-sm font-medium transition">
+            <i class="fas fa-bell text-xs"></i> Eslatma
+        </a>
+        <a href="{{ route('properties.create') }}" class="flex items-center gap-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-4 py-3 text-sm font-medium transition">
             <i class="fas fa-plus text-xs"></i> Yangi uy
         </a>
         <a href="{{ route('clients.index') }}" class="flex items-center gap-2 rounded-xl bg-violet-50 hover:bg-violet-100 text-violet-700 px-4 py-3 text-sm font-medium transition">
@@ -200,9 +252,6 @@
         </a>
         <a href="{{ route('sales.index') }}" class="flex items-center gap-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 px-4 py-3 text-sm font-medium transition">
             <i class="fas fa-plus text-xs"></i> Yangi savdo
-        </a>
-        <a href="{{ route('investors.index') }}" class="flex items-center gap-2 rounded-xl bg-cyan-50 hover:bg-cyan-100 text-cyan-700 px-4 py-3 text-sm font-medium transition">
-            <i class="fas fa-plus text-xs"></i> Yangi investor
         </a>
         <a href="{{ route('mortgage.calculator') }}" class="flex items-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-4 py-3 text-sm font-medium transition">
             <i class="fas fa-calculator text-xs"></i> Kalkulyator

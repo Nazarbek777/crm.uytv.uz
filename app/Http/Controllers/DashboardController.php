@@ -6,6 +6,8 @@ use App\Models\Investor;
 use App\Models\Property;
 use App\Models\Sale;
 use App\Models\Client;
+use App\Models\Lead;
+use App\Models\Reminder;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -35,6 +37,16 @@ class DashboardController extends Controller
             'chart_months' => $monthlyTrend['labels'],
             'chart_sales' => $monthlyTrend['sales_count'],
             'chart_income' => $monthlyTrend['income'],
+            'leads_total' => Lead::count(),
+            'leads_new' => Lead::where('status', 'new')->count(),
+            'leads_active' => Lead::whereIn('status', ['contacted', 'qualified', 'negotiating'])->count(),
+            'leads_by_status' => Lead::selectRaw('status, count(*) as c')->groupBy('status')->pluck('c', 'status'),
+            'today_reminders' => Reminder::with('lead')
+                ->where('user_id', auth()->id())
+                ->where('completed', false)
+                ->where('remind_at', '<=', now()->endOfDay())
+                ->orderBy('remind_at')
+                ->limit(5)->get(),
         ];
 
         return view('dashboard', compact('stats'));

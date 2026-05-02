@@ -7,6 +7,9 @@ use App\Http\Controllers\InvestorController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\OperatorController;
+use App\Http\Controllers\LeadController;
+use App\Http\Controllers\ReminderController;
 
 Route::get('/', function () {
     return auth()->check() ? redirect()->route('dashboard') : redirect()->route('login');
@@ -26,4 +29,14 @@ Route::middleware('auth')->group(function () {
     Route::resource('properties', PropertyController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::resource('clients', ClientController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('sales', SaleController::class)->only(['index', 'store', 'destroy']);
+
+    Route::resource('operators', OperatorController::class)->parameters(['operators' => 'operator']);
+
+    Route::resource('leads', LeadController::class);
+    Route::patch('/leads/{lead}/status', [LeadController::class, 'updateStatus'])->name('leads.status');
+    Route::post('/leads/{lead}/convert', [LeadController::class, 'convert'])->name('leads.convert');
+
+    Route::resource('reminders', ReminderController::class)->except(['show']);
+    Route::patch('/reminders/{reminder}/complete', [ReminderController::class, 'complete'])->name('reminders.complete');
+    Route::patch('/reminders/{reminder}/uncomplete', [ReminderController::class, 'uncomplete'])->name('reminders.uncomplete');
 });
