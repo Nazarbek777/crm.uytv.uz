@@ -21,6 +21,7 @@ Route::post('logout', [AuthController::class, 'logout'])->middleware('auth')->na
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/calculate-mortgage', [DashboardController::class, 'calculateMortgage'])->name('calculate.mortgage');
 
     Route::resource('investors', InvestorController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('properties', PropertyController::class)->only(['index', 'store', 'update', 'destroy']);

@@ -69,9 +69,19 @@
         <p class="mt-3 text-sm text-slate-500">Yangi savdolarni baholash uchun tezkor ko‘rsatkich.</p>
     </div>
     <div class="rounded-3xl bg-white p-6 shadow-lg border border-slate-200">
+        <p class="text-sm text-slate-500">Oylik savdolar</p>
+        <p class="mt-4 text-4xl font-semibold text-slate-900">{{ $stats['monthly_sales'] }}</p>
+        <p class="mt-3 text-sm text-slate-500">Joriy oyda amalga oshirilgan savdolar.</p>
+    </div>
+    <div class="rounded-3xl bg-white p-6 shadow-lg border border-slate-200">
         <p class="text-sm text-slate-500">Faol investorlar</p>
         <p class="mt-4 text-4xl font-semibold text-slate-900">{{ $stats['active_investors'] }}</p>
         <p class="mt-3 text-sm text-slate-500">Propertylari bo‘lgan investorlar soni.</p>
+    </div>
+    <div class="rounded-3xl bg-white p-6 shadow-lg border border-slate-200">
+        <p class="text-sm text-slate-500">Choraklik o‘sish</p>
+        <p class="mt-4 text-4xl font-semibold text-slate-900">{{ $stats['quarterly_growth'] }}%</p>
+        <p class="mt-3 text-sm text-slate-500">Oldingi chorakka nisbatan o‘sish.</p>
     </div>
 </div>
 
@@ -126,6 +136,59 @@
             <p class="mt-2 text-sm text-slate-400">Tezda narx bandini aniqlang.</p>
         </div>
     </div>
+</div>
+
+<div class="rounded-3xl bg-white p-6 shadow-lg border border-slate-200 mb-8">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+        <div>
+            <h3 class="text-xl font-semibold text-slate-900">Ipoteka kalkulyatori</h3>
+            <p class="text-sm text-slate-500">Kredit summasi, foiz stavkasi va muddatni kiriting va oylik to‘lovni hisoblang.</p>
+        </div>
+    </div>
+    <form action="{{ route('calculate.mortgage') }}" method="POST" class="grid gap-4 md:grid-cols-4 mb-6">
+        @csrf
+        <div>
+            <label for="loan_amount" class="block text-sm font-medium text-slate-700 mb-2">Kredit summasi (UZS)</label>
+            <input type="number" id="loan_amount" name="loan_amount" value="{{ old('loan_amount', $stats['avg_price'] * 0.7) }}" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:border-slate-500 focus:outline-none" placeholder="Masalan: 500000000" required>
+        </div>
+        <div>
+            <label for="interest_rate" class="block text-sm font-medium text-slate-700 mb-2">Yillik foiz stavkasi (%)</label>
+            <input type="number" step="0.01" id="interest_rate" name="interest_rate" value="{{ old('interest_rate', 12) }}" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:border-slate-500 focus:outline-none" placeholder="Masalan: 12" required>
+        </div>
+        <div>
+            <label for="term_years" class="block text-sm font-medium text-slate-700 mb-2">Muddat (yil)</label>
+            <input type="number" id="term_years" name="term_years" value="{{ old('term_years', 20) }}" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:border-slate-500 focus:outline-none" placeholder="Masalan: 20" required>
+        </div>
+        <div class="flex items-end">
+            <button type="submit" class="w-full rounded-2xl bg-slate-900 px-6 py-3 text-white font-medium hover:bg-slate-800 transition">
+                Hisoblash
+            </button>
+        </div>
+    </form>
+    @if(session('mortgage_result'))
+        <div class="rounded-3xl bg-slate-50 p-6 border border-slate-200">
+            <h4 class="text-lg font-semibold text-slate-900 mb-4">Hisoblash natijasi</h4>
+            <div class="grid gap-4 md:grid-cols-3">
+                <div class="text-center">
+                    <p class="text-sm text-slate-500">Oylik to‘lov</p>
+                    <p class="text-2xl font-semibold text-slate-900">{{ number_format(session('mortgage_result')['monthly_payment'], 0, ',', ' ') }} UZS</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm text-slate-500">Jami to‘lov</p>
+                    <p class="text-2xl font-semibold text-slate-900">{{ number_format(session('mortgage_result')['total_payment'], 0, ',', ' ') }} UZS</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm text-slate-500">Jami foiz</p>
+                    <p class="text-2xl font-semibold text-slate-900">{{ number_format(session('mortgage_result')['total_interest'], 0, ',', ' ') }} UZS</p>
+                </div>
+            </div>
+            <p class="text-sm text-slate-500 mt-4">
+                Kredit: {{ number_format(session('mortgage_result')['loan_amount'], 0, ',', ' ') }} UZS, 
+                Foiz: {{ session('mortgage_result')['interest_rate'] }}%, 
+                Muddat: {{ session('mortgage_result')['term_years'] }} yil
+            </p>
+        </div>
+    @endif
 </div>
 
 <div class="rounded-3xl bg-white p-6 shadow-lg border border-slate-200 mb-8">
