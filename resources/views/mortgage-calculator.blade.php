@@ -3,7 +3,7 @@
 @section('title', 'Ipoteka Kalkulyatori')
 
 @section('content')
-<div class="max-w-6xl mx-auto" x-data="mortgageCalc()" x-init="calc()">
+<div class="max-w-6xl mx-auto" x-data="mortgageCalc()" x-init="syncDownPaymentAmountFromPercent(); calc()">
     <div class="mb-8">
         <div class="flex items-center gap-4 mb-4">
             <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 transition">
@@ -51,13 +51,15 @@
                 </div>
 
                 <div>
-                    <label for="down_payment_percent" class="block text-sm font-medium text-slate-700 mb-2">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">
                         Boshlang‘ich to‘lov: <span class="font-semibold" x-text="downPaymentPercent + '%'"></span>
+                        <span class="text-xs text-slate-500 font-normal">— minimal 20%</span>
                     </label>
-                    <input type="range" id="down_payment_percent" x-model.number="downPaymentPercent" @input="calc()" min="0" max="100" step="1" class="w-full accent-slate-900">
-                    <div class="flex justify-between text-xs text-slate-500 mt-1">
-                        <span>0%</span><span>20%</span><span>50%</span><span>100%</span>
+                    <input type="range" id="down_payment_percent" x-model.number="downPaymentPercent" @input="onPercentChange()" min="20" max="100" step="1" class="w-full accent-slate-900">
+                    <div class="flex justify-between text-xs text-slate-500 mt-1 mb-3">
+                        <span>20%</span><span>40%</span><span>60%</span><span>80%</span><span>100%</span>
                     </div>
+                    <input type="text" inputmode="numeric" x-model="downPaymentAmountInput" @input="onDownPaymentAmountInput($event)" :placeholder="'Yoki summa (' + currency + ')'" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:border-slate-500 focus:outline-none">
                 </div>
 
                 <div>
@@ -183,6 +185,7 @@
             investorFee: 0,
             investorFeeInput: '',
             downPaymentPercent: 30,
+            downPaymentAmountInput: '',
             interestRate: 12,
             termYears: 20,
             exchangeRate: 12600,
@@ -211,6 +214,7 @@
                 this.displayCurrency = c;
                 this.propertyPriceInput = this.propertyPrice ? this.propertyPrice.toLocaleString('ru-RU').replace(/,/g, ' ') : '';
                 this.investorFeeInput = this.investorFee ? this.investorFee.toLocaleString('ru-RU').replace(/,/g, ' ') : '';
+                this.syncDownPaymentAmountFromPercent();
                 this.calc();
             },
 
@@ -228,7 +232,36 @@
                 const formatted = num ? num.toLocaleString('ru-RU').replace(/,/g, ' ') : '';
                 this[field + 'Input'] = formatted;
                 e.target.value = formatted;
+                if (field === 'propertyPrice') this.syncDownPaymentAmountFromPercent();
                 this.calc();
+            },
+
+            onPercentChange() {
+                if (this.downPaymentPercent < 20) this.downPaymentPercent = 20;
+                this.syncDownPaymentAmountFromPercent();
+                this.calc();
+            },
+
+            onDownPaymentAmountInput(e) {
+                const raw = e.target.value.replace(/\D/g, '');
+                const num = raw ? parseInt(raw, 10) : 0;
+                const formatted = num ? num.toLocaleString('ru-RU').replace(/,/g, ' ') : '';
+                this.downPaymentAmountInput = formatted;
+                e.target.value = formatted;
+
+                const price = Number(this.propertyPrice) || 0;
+                if (price > 0) {
+                    let pct = (num / price) * 100;
+                    if (pct < 20) pct = 20;
+                    if (pct > 100) pct = 100;
+                    this.downPaymentPercent = Math.round(pct);
+                }
+                this.calc();
+            },
+
+            syncDownPaymentAmountFromPercent() {
+                const amount = Math.round((Number(this.propertyPrice) || 0) * (this.downPaymentPercent / 100));
+                this.downPaymentAmountInput = amount ? amount.toLocaleString('ru-RU').replace(/,/g, ' ') : '';
             },
 
             calc() {
