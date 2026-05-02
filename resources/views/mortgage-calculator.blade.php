@@ -20,10 +20,18 @@
 
             <div class="space-y-6">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Valyuta</label>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Kiritish valyutasi</label>
                     <div class="grid grid-cols-2 gap-2">
                         <button type="button" @click="setCurrency('UZS')" :class="currency === 'UZS' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="rounded-2xl px-4 py-3 text-sm font-medium transition">UZS</button>
                         <button type="button" @click="setCurrency('USD')" :class="currency === 'USD' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="rounded-2xl px-4 py-3 text-sm font-medium transition">USD</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Natija valyutasi</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" @click="displayCurrency = 'UZS'; calc()" :class="displayCurrency === 'UZS' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="rounded-2xl px-4 py-3 text-sm font-medium transition">UZS</button>
+                        <button type="button" @click="displayCurrency = 'USD'; calc()" :class="displayCurrency === 'USD' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'" class="rounded-2xl px-4 py-3 text-sm font-medium transition">USD</button>
                     </div>
                 </div>
 
@@ -67,8 +75,8 @@
                     </div>
                 </div>
 
-                <div x-show="currency === 'USD'">
-                    <label for="exchange_rate" class="block text-sm font-medium text-slate-700 mb-2">USD kursi (UZS)</label>
+                <div x-show="currency !== displayCurrency || currency === 'USD' || displayCurrency === 'USD'">
+                    <label for="exchange_rate" class="block text-sm font-medium text-slate-700 mb-2">USD kursi (1 USD = ? UZS)</label>
                     <input type="number" id="exchange_rate" x-model.number="exchangeRate" @input="calc()" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:border-slate-500 focus:outline-none">
                 </div>
             </div>
@@ -81,39 +89,43 @@
                 <div x-show="loanAmount > 0" class="grid gap-4 sm:grid-cols-2">
                     <div class="rounded-2xl bg-slate-900/90 p-4 border border-slate-700">
                         <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Uy narxi</p>
-                        <p class="mt-2 text-xl font-semibold" x-text="fmt(propertyPrice) + ' ' + currency"></p>
+                        <p class="mt-2 text-xl font-semibold" x-text="fmt(disp(propertyPrice)) + ' ' + displayCurrency"></p>
                     </div>
                     <div class="rounded-2xl bg-slate-900/90 p-4 border border-slate-700">
                         <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Boshlang‘ich to‘lov (uy narxidan)</p>
-                        <p class="mt-2 text-xl font-semibold" x-text="fmt(downPayment) + ' ' + currency"></p>
+                        <p class="mt-2 text-xl font-semibold" x-text="fmt(disp(downPayment)) + ' ' + displayCurrency"></p>
                         <p class="text-xs text-slate-400 mt-1" x-text="downPaymentPercent + '% uy narxidan'"></p>
                     </div>
                     <div class="rounded-2xl bg-slate-900/90 p-4 border border-slate-700">
                         <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Investor qo‘shimchasi</p>
-                        <p class="mt-2 text-xl font-semibold" x-text="fmt(investorFee) + ' ' + currency"></p>
+                        <p class="mt-2 text-xl font-semibold" x-text="fmt(disp(investorFee)) + ' ' + displayCurrency"></p>
                     </div>
                     <div class="rounded-2xl bg-cyan-900/40 p-4 border border-cyan-700/60">
                         <p class="text-xs uppercase tracking-[0.2em] text-cyan-300">Mijoz to‘laydigan jami boshlang‘ich</p>
-                        <p class="mt-2 text-xl font-semibold" x-text="fmt(clientUpfront) + ' ' + currency"></p>
+                        <p class="mt-2 text-xl font-semibold" x-text="fmt(disp(clientUpfront)) + ' ' + displayCurrency"></p>
                         <p class="text-xs text-cyan-300/80 mt-1">Boshlang‘ich + investor qo‘shimchasi</p>
                     </div>
                     <div class="rounded-2xl bg-slate-900/90 p-4 border border-slate-700 sm:col-span-2">
                         <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Kredit summasi</p>
-                        <p class="mt-2 text-2xl font-semibold" x-text="fmt(loanAmount) + ' ' + currency"></p>
+                        <p class="mt-2 text-2xl font-semibold" x-text="fmt(disp(loanAmount)) + ' ' + displayCurrency"></p>
                         <p class="text-xs text-slate-400 mt-1">Uy narxi − boshlang‘ich to‘lov</p>
                     </div>
                     <div class="rounded-2xl bg-emerald-900/40 p-4 border border-emerald-700/60 sm:col-span-2">
                         <p class="text-xs uppercase tracking-[0.2em] text-emerald-300">Oylik to‘lov</p>
-                        <p class="mt-2 text-3xl font-bold" x-text="fmt(monthlyPayment) + ' ' + currency"></p>
+                        <p class="mt-2 text-3xl font-bold" x-text="fmt(disp(monthlyPayment)) + ' ' + displayCurrency"></p>
                     </div>
                     <div class="rounded-2xl bg-slate-900/90 p-4 border border-slate-700">
                         <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Jami to‘lov</p>
-                        <p class="mt-2 text-xl font-semibold" x-text="fmt(totalPayment) + ' ' + currency"></p>
+                        <p class="mt-2 text-xl font-semibold" x-text="fmt(disp(totalPayment)) + ' ' + displayCurrency"></p>
                     </div>
                     <div class="rounded-2xl bg-slate-900/90 p-4 border border-slate-700">
                         <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Jami foiz</p>
-                        <p class="mt-2 text-xl font-semibold" x-text="fmt(totalInterest) + ' ' + currency"></p>
+                        <p class="mt-2 text-xl font-semibold" x-text="fmt(disp(totalInterest)) + ' ' + displayCurrency"></p>
                     </div>
+                </div>
+
+                <div x-show="loanAmount > 0 && currency !== displayCurrency" class="mt-4 text-xs text-slate-400 text-center">
+                    Kurs: 1 USD = <span x-text="fmt(exchangeRate)"></span> UZS
                 </div>
 
                 <div x-show="loanAmount <= 0" class="text-slate-300 text-sm">
@@ -165,6 +177,7 @@
         const initialPrice = {{ (int) round($avgPrice) }};
         return {
             currency: 'UZS',
+            displayCurrency: 'UZS',
             propertyPrice: initialPrice,
             propertyPriceInput: initialPrice ? initialPrice.toLocaleString('ru-RU').replace(/,/g, ' ') : '',
             investorFee: 0,
@@ -195,9 +208,17 @@
                     this.investorFee = Math.round(this.investorFee * this.exchangeRate);
                 }
                 this.currency = c;
+                this.displayCurrency = c;
                 this.propertyPriceInput = this.propertyPrice ? this.propertyPrice.toLocaleString('ru-RU').replace(/,/g, ' ') : '';
                 this.investorFeeInput = this.investorFee ? this.investorFee.toLocaleString('ru-RU').replace(/,/g, ' ') : '';
                 this.calc();
+            },
+
+            disp(v) {
+                if (this.currency === this.displayCurrency) return v;
+                if (this.currency === 'USD' && this.displayCurrency === 'UZS') return v * this.exchangeRate;
+                if (this.currency === 'UZS' && this.displayCurrency === 'USD') return v / this.exchangeRate;
+                return v;
             },
 
             onNumberInput(e, field) {
