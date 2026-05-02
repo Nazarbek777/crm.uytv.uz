@@ -51,7 +51,7 @@ class DatabaseSeeder extends Seeder
             'property_id' => $properties[2]->id,
             'client_id' => $clients[0]->id,
             'price' => 180000000,
-            'type' => 'sotish',
+            'type' => 'sale',
             'sale_date' => now()->subDays(4),
             'notes' => 'Tezkor to‘lov bilan sotildi.',
         ]);
@@ -60,7 +60,7 @@ class DatabaseSeeder extends Seeder
             'property_id' => $properties[4]->id,
             'client_id' => $clients[1]->id,
             'price' => 150000000,
-            'type' => 'sotish',
+            'type' => 'sale',
             'sale_date' => now()->subDays(12),
             'notes' => 'Sotib olish shartlari rasman tasdiqlandi.',
         ]);
@@ -69,7 +69,7 @@ class DatabaseSeeder extends Seeder
             'property_id' => $properties[1]->id,
             'client_id' => $clients[2]->id,
             'price' => 12000000,
-            'type' => 'ijara',
+            'type' => 'rent',
             'sale_date' => now()->subDays(2),
             'notes' => 'Uzoq muddatli ijaraga olindi.',
         ]);
