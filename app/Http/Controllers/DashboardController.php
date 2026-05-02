@@ -57,7 +57,6 @@ class DashboardController extends Controller
     {
         $request->validate([
             'property_price' => 'required|numeric|min:0',
-            'investor_addition' => 'nullable|numeric|min:0',
             'down_payment_percent' => 'required|numeric|min:0|max:100',
             'interest_rate' => 'required|numeric|min:0|max:100',
             'term_years' => 'required|integer|min:1|max:50',
@@ -69,14 +68,10 @@ class DashboardController extends Controller
 
         // Convert to UZS for calculation
         $propertyPriceUZS = $currency === 'USD' ? $request->property_price * $exchangeRate : $request->property_price;
-        $investorAdditionUZS = $currency === 'USD' ? ($request->investor_addition ?? 0) * $exchangeRate : ($request->investor_addition ?? 0);
-
-        $totalPropertyPriceUZS = $propertyPriceUZS + $investorAdditionUZS;
 
         $downPaymentPercent = $request->down_payment_percent;
-        $downPaymentFromPercentUZS = $totalPropertyPriceUZS * ($downPaymentPercent / 100);
-        $totalDownPaymentUZS = $downPaymentFromPercentUZS + $investorAdditionUZS;
-        $loanAmountUZS = $totalPropertyPriceUZS - $totalDownPaymentUZS;
+        $downPaymentUZS = $propertyPriceUZS * ($downPaymentPercent / 100);
+        $loanAmountUZS = $propertyPriceUZS - $downPaymentUZS;
 
         $maxLoanLimit = 380000000; // 380 million UZS max bank loan
         if ($loanAmountUZS > $maxLoanLimit) {
@@ -101,9 +96,7 @@ class DashboardController extends Controller
         return back()->with([
             'mortgage_result' => [
                 'property_price' => round($propertyPriceUZS / $conversionRate),
-                'investor_addition' => round($investorAdditionUZS / $conversionRate),
-                'total_property_price' => round($totalPropertyPriceUZS / $conversionRate),
-                'down_payment' => round($totalDownPaymentUZS / $conversionRate),
+                'down_payment' => round($downPaymentUZS / $conversionRate),
                 'loan_amount' => round($loanAmountUZS / $conversionRate),
                 'monthly_payment' => round($monthlyPaymentUZS / $conversionRate),
                 'total_payment' => round($totalPaymentUZS / $conversionRate),

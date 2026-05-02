@@ -32,11 +32,6 @@
                     @error('currency') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label for="investor_addition" class="block text-sm font-medium text-slate-700 mb-2">Investor qo'shimi (ixtiyoriy)</label>
-                    <input type="number" id="investor_addition" name="investor_addition" value="{{ old('investor_addition', 0) }}" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:border-slate-500 focus:outline-none" placeholder="Masalan: 5000000">
-                    @error('investor_addition') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
-                </div>
-                <div>
                     <label for="down_payment_percent" class="block text-sm font-medium text-slate-700 mb-2">Boshlang‘ich to‘lov (%)</label>
                     <input type="number" step="0.01" id="down_payment_percent" name="down_payment_percent" value="{{ old('down_payment_percent', 30) }}" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:border-slate-500 focus:outline-none" placeholder="Masalan: 30" required>
                     @error('down_payment_percent') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
@@ -61,23 +56,15 @@
             @if(session('mortgage_result'))
                 <div class="rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-2xl">
                     <h3 class="text-xl font-semibold mb-6">Hisoblash natijasi</h3>
-                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         <div class="rounded-3xl bg-slate-900/90 p-4 border border-slate-700">
                             <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Uy narxi</p>
                             <p class="mt-2 text-2xl font-semibold">{{ number_format(session('mortgage_result')['property_price'], 0, ',', ' ') }} {{ session('mortgage_result')['currency'] }}</p>
                         </div>
                         <div class="rounded-3xl bg-slate-900/90 p-4 border border-slate-700">
-                            <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Investor qo'shimi</p>
-                            <p class="mt-2 text-2xl font-semibold">{{ number_format(session('mortgage_result')['investor_addition'], 0, ',', ' ') }} {{ session('mortgage_result')['currency'] }}</p>
-                        </div>
-                        <div class="rounded-3xl bg-slate-900/90 p-4 border border-slate-700">
-                            <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Jami uy narxi</p>
-                            <p class="mt-2 text-2xl font-semibold">{{ number_format(session('mortgage_result')['total_property_price'], 0, ',', ' ') }} {{ session('mortgage_result')['currency'] }}</p>
-                        </div>
-                        <div class="rounded-3xl bg-slate-900/90 p-4 border border-slate-700">
                             <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Boshlang‘ich to‘lov</p>
                             <p class="mt-2 text-2xl font-semibold">{{ number_format(session('mortgage_result')['down_payment'], 0, ',', ' ') }} {{ session('mortgage_result')['currency'] }}</p>
-                            <p class="text-xs text-slate-400">{{ session('mortgage_result')['down_payment_percent'] }}% + investor</p>
+                            <p class="text-xs text-slate-400">{{ session('mortgage_result')['down_payment_percent'] }}%</p>
                         </div>
                         <div class="rounded-3xl bg-slate-900/90 p-4 border border-slate-700">
                             <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Kredit summasi</p>
