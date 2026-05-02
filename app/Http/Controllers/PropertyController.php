@@ -12,6 +12,12 @@ class PropertyController extends Controller
     {
         $query = Property::with('investor');
         
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where('title', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+        }
         if ($request->status) {
             $query->where('status', $request->status);
         }
@@ -19,7 +25,7 @@ class PropertyController extends Controller
             $query->where('investor_id', $request->investor_id);
         }
         
-        $properties = $query->orderByDesc('id')->get();
+        $properties = $query->orderByDesc('id')->paginate(10);
         $investors = Investor::orderBy('name')->get();
         
         return view('properties.index', compact('properties', 'investors'));

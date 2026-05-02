@@ -13,6 +13,21 @@
     </button>
 </div>
 
+<!-- Search Form -->
+<div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+    <form method="GET" class="flex gap-4">
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Ism, telefon yoki email bo'yicha qidirish..." class="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+        <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            <i class="fas fa-search mr-2"></i>Qidirish
+        </button>
+        @if(request('search'))
+            <a href="{{ route('investors.index') }}" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+                Tozalash
+            </a>
+        @endif
+    </form>
+</div>
+
 <!-- Investors Table -->
 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
     <table class="w-full">
@@ -119,6 +134,11 @@
             </div>
         </form>
     </div>
+</div>
+
+<!-- Pagination -->
+<div class="mt-6">
+    {{ $investors->appends(request()->query())->links() }}
 </div>
 
 <script>

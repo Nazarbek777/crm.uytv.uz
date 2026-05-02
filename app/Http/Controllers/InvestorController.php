@@ -7,9 +7,18 @@ use Illuminate\Http\Request;
 
 class InvestorController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $investors = Investor::orderBy('name')->get();
+        $query = Investor::query();
+
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where('name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+        }
+
+        $investors = $query->orderBy('name')->paginate(10);
         return view('investors.index', compact('investors'));
     }
 
