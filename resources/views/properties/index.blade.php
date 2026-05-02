@@ -2,241 +2,122 @@
 
 @section('title', 'Uylar')
 
+@section('actions')
+    <a href="{{ route('properties.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 text-sm font-medium transition">
+        <i class="fas fa-plus text-xs"></i> Yangi uy
+    </a>
+@endsection
+
 @section('content')
-<div class="flex justify-between items-center mb-6">
-    <div>
-        <h2 class="text-3xl font-bold text-gray-800">Uylar</h2>
-        <p class="text-gray-600">Barcha uylar ro'yxati</p>
+@php
+    $statusBadge = [
+        'free' => ['label' => 'Bo\'sh', 'class' => 'bg-emerald-50 text-emerald-700 border-emerald-200'],
+        'sold' => ['label' => 'Sotilgan', 'class' => 'bg-blue-50 text-blue-700 border-blue-200'],
+        'rent' => ['label' => 'Ijarada', 'class' => 'bg-orange-50 text-orange-700 border-orange-200'],
+    ];
+@endphp
+
+<form method="GET" class="rounded-2xl bg-white p-4 border border-slate-200 shadow-sm mb-4">
+    <div class="grid gap-3 sm:grid-cols-12">
+        <div class="sm:col-span-6">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-3 flex items-center text-slate-400"><i class="fas fa-search text-sm"></i></span>
+                <input type="search" name="search" value="{{ request('search') }}" placeholder="Nom, manzil bo'yicha qidirish..." class="w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 pl-10 pr-4 text-sm focus:border-slate-500 focus:outline-none">
+            </div>
+        </div>
+        <div class="sm:col-span-3">
+            <select name="status" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm focus:border-slate-500 focus:outline-none">
+                <option value="">Barcha holatlar</option>
+                <option value="free" @selected(request('status') === 'free')>Bo'sh</option>
+                <option value="sold" @selected(request('status') === 'sold')>Sotilgan</option>
+                <option value="rent" @selected(request('status') === 'rent')>Ijarada</option>
+            </select>
+        </div>
+        <div class="sm:col-span-3">
+            <select name="investor_id" onchange="this.form.submit()" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm focus:border-slate-500 focus:outline-none">
+                <option value="">Barcha investorlar</option>
+                @foreach($investors as $inv)
+                    <option value="{{ $inv->id }}" @selected(request('investor_id') == $inv->id)>{{ $inv->name }}</option>
+                @endforeach
+            </select>
+        </div>
     </div>
-    <button onclick="document.getElementById('addModal').classList.remove('hidden')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-        <i class="fas fa-plus mr-2"></i>Yangi Uy
-    </button>
-</div>
+    @if(request()->hasAny(['search', 'status', 'investor_id']))
+        <div class="mt-3 flex items-center justify-between text-xs">
+            <span class="text-slate-500">{{ $properties->total() }} ta natija</span>
+            <a href="{{ route('properties.index') }}" class="text-slate-500 hover:text-slate-900">Filtrlarni tozalash <i class="fas fa-times ml-0.5"></i></a>
+        </div>
+    @endif
+</form>
 
-<!-- Filters -->
-<div class="bg-white rounded-xl shadow-sm p-4 mb-6">
-    <form method="GET" class="flex gap-4 flex-wrap">
-        <select name="status" onchange="this.form.submit()" class="px-3 py-2 border rounded-lg">
-            <option value="">Barcha holatlar</option>
-            <option value="free" {{ request('status') == 'free' ? 'selected' : '' }}>Bo'sh</option>
-            <option value="sold" {{ request('status') == 'sold' ? 'selected' : '' }}>Sotilgan</option>
-            <option value="rent" {{ request('status') == 'rent' ? 'selected' : '' }}>Ijara</option>
-        </select>
-        <select name="investor_id" onchange="this.form.submit()" class="px-3 py-2 border rounded-lg">
-            <option value="">Barcha investorlar</option>
-            @foreach($investors as $investor)
-                <option value="{{ $investor->id }}" {{ request('investor_id') == $investor->id ? 'selected' : '' }}>{{ $investor->name }}</option>
-            @endforeach
-        </select>
-    </form>
-</div>
+<div class="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+    @if($properties->isEmpty())
+        <div class="px-5 py-16 text-center">
+            <i class="fas fa-building text-4xl text-slate-300 mb-3 block"></i>
+            <p class="text-sm text-slate-500">Uylar topilmadi</p>
+            <a href="{{ route('properties.create') }}" class="mt-4 inline-flex items-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 text-sm font-medium transition">
+                <i class="fas fa-plus text-xs"></i> Birinchi uyni qo'shish
+            </a>
+        </div>
+    @else
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-medium">Uy</th>
+                        <th class="px-4 py-3 text-left font-medium">Manzil</th>
+                        <th class="px-4 py-3 text-left font-medium">Investor</th>
+                        <th class="px-4 py-3 text-left font-medium">Xususiyatlari</th>
+                        <th class="px-4 py-3 text-right font-medium">Narx</th>
+                        <th class="px-4 py-3 text-center font-medium">Holat</th>
+                        <th class="px-4 py-3 text-right font-medium"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @foreach($properties as $property)
+                        @php $badge = $statusBadge[$property->status] ?? ['label' => $property->status, 'class' => 'bg-slate-100 text-slate-700']; @endphp
+                        <tr class="hover:bg-slate-50/60 transition">
+                            <td class="px-4 py-3">
+                                <p class="font-medium text-slate-900">{{ $property->title }}</p>
+                                <p class="text-[11px] text-slate-400">#{{ $property->id }}</p>
+                            </td>
+                            <td class="px-4 py-3 text-slate-600">{{ $property->address }}</td>
+                            <td class="px-4 py-3 text-slate-600">{{ $property->investor->name ?? '—' }}</td>
+                            <td class="px-4 py-3 text-slate-500 text-xs">
+                                @if($property->rooms){{ $property->rooms }} xona @endif
+                                @if($property->area) · {{ $property->area }} m² @endif
+                                @if($property->floor && $property->total_floors) · {{ $property->floor }}/{{ $property->total_floors }} qavat @endif
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <p class="font-semibold text-slate-900">{{ number_format($property->price, 0, '.', ' ') }}</p>
+                                <p class="text-[11px] text-slate-400">UZS</p>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium {{ $badge['class'] }}">{{ $badge['label'] }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-right whitespace-nowrap">
+                                <a href="{{ route('properties.edit', $property) }}" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition" title="Tahrirlash">
+                                    <i class="fas fa-pen text-xs"></i>
+                                </a>
+                                <form action="{{ route('properties.destroy', $property) }}" method="POST" class="inline" onsubmit="return confirm('Bu uyni o\'chirishni tasdiqlaysizmi?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 transition" title="O'chirish">
+                                        <i class="fas fa-trash text-xs"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
 
-<!-- Properties Table -->
-<div class="bg-white rounded-xl shadow-sm overflow-hidden">
-    <table class="w-full">
-        <thead class="bg-gray-50">
-            <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Manzil</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Narx</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Holat</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Investor</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amallar</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-            @forelse($properties as $index => $property)
-            <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 text-gray-500">{{ $index + 1 }}</td>
-                <td class="px-6 py-4 font-medium text-gray-800">{{ $property->title }}</td>
-                <td class="px-6 py-4 text-gray-600">{{ $property->address }}</td>
-                <td class="px-6 py-4 font-medium text-gray-800">{{ number_format($property->price, 0, '.', ' ') }} so'm</td>
-                <td class="px-6 py-4">
-                    @if($property->status == 'free')
-                        <span class="px-2 py-1 bg-green-100 text-green-600 rounded-full text-sm">Bo'sh</span>
-                    @elseif($property->status == 'sold')
-                        <span class="px-2 py-1 bg-blue-100 text-blue-600 rounded-full text-sm">Sotilgan</span>
-                    @else
-                        <span class="px-2 py-1 bg-orange-100 text-orange-600 rounded-full text-sm">Ijara</span>
-                    @endif
-                </td>
-                <td class="px-6 py-4 text-gray-600">{{ $property->investor->name ?? '-' }}</td>
-                <td class="px-6 py-4">
-                    <button onclick="editProperty({{ $property->id }}, '{{ $property->title }}', '{{ $property->address }}', {{ $property->price }}, '{{ $property->status }}', {{ $property->rooms ?? 0 }}, {{ $property->floor ?? 0 }}, {{ $property->total_floors ?? 0 }}, {{ $property->area ?? 0 }}, '{{ $property->description }}', {{ $property->investor_id ?? 'null' }})" class="text-blue-600 hover:text-blue-800 mr-3">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <form action="{{ route('properties.destroy', $property->id) }}" method="POST" class="inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" onclick="return confirm('Rostan o\'chirish?')" class="text-red-600 hover:text-red-800">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </form>
-                </td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="7" class="px-6 py-8 text-center text-gray-500">Uylar yo'q</td>
-            </tr>
-            @endforelse
-        </tbody>
-    </table>
+        @if($properties->hasPages())
+            <div class="px-4 py-3 border-t border-slate-100">
+                {{ $properties->links() }}
+            </div>
+        @endif
+    @endif
 </div>
-
-<!-- Add Modal -->
-<div id="addModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-    <div class="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <h3 class="text-xl font-semibold mb-4">Yangi Uy</h3>
-        <form action="{{ route('properties.store') }}" method="POST">
-            @csrf
-            <div class="grid grid-cols-2 gap-4">
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
-                    <input type="text" name="title" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                </div>
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Investor</label>
-                    <select name="investor_id" class="w-full px-3 py-2 border rounded-lg">
-                        <option value="">Tanlang</option>
-                        @foreach($investors as $investor)
-                            <option value="{{ $investor->id }}">{{ $investor->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Manzil *</label>
-                <input type="text" name="address" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Narx (so'm) *</label>
-                    <input type="number" name="price" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                </div>
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Holat *</label>
-                    <select name="status" required class="w-full px-3 py-2 border rounded-lg">
-                        <option value="free">Bo'sh</option>
-                        <option value="sold">Sotilgan</option>
-                        <option value="rent">Ijara</option>
-                    </select>
-                </div>
-            </div>
-            <div class="grid grid-cols-3 gap-4">
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Xonalar</label>
-                    <input type="number" name="rooms" min="1" class="w-full px-3 py-2 border rounded-lg">
-                </div>
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Qavat</label>
-                    <input type="number" name="floor" min="0" class="w-full px-3 py-2 border rounded-lg">
-                </div>
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Umumiy qavat</label>
-                    <input type="number" name="total_floors" min="0" class="w-full px-3 py-2 border rounded-lg">
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Maydon (m²)</label>
-                <input type="number" name="area" min="0" class="w-full px-3 py-2 border rounded-lg">
-            </div>
-            <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Izoh</label>
-                <textarea name="description" rows="2" class="w-full px-3 py-2 border rounded-lg"></textarea>
-            </div>
-            <div class="flex justify-end gap-3">
-                <button type="button" onclick="document.getElementById('addModal').classList.add('hidden')" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">Bekor</button>
-                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Saqlash</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Edit Modal -->
-<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-    <div class="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <h3 class="text-xl font-semibold mb-4">Uyni tahrirlash</h3>
-        <form id="editForm" method="POST">
-            @csrf
-            @method('PUT')
-            <div class="grid grid-cols-2 gap-4">
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
-                    <input type="text" name="title" id="editTitle" required class="w-full px-3 py-2 border rounded-lg">
-                </div>
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Investor</label>
-                    <select name="investor_id" id="editInvestor" class="w-full px-3 py-2 border rounded-lg">
-                        <option value="">Tanlang</option>
-                        @foreach($investors as $investor)
-                            <option value="{{ $investor->id }}">{{ $investor->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Manzil *</label>
-                <input type="text" name="address" id="editAddress" required class="w-full px-3 py-2 border rounded-lg">
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Narx (so'm) *</label>
-                    <input type="number" name="price" id="editPrice" required class="w-full px-3 py-2 border rounded-lg">
-                </div>
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Holat *</label>
-                    <select name="status" id="editStatus" required class="w-full px-3 py-2 border rounded-lg">
-                        <option value="free">Bo'sh</option>
-                        <option value="sold">Sotilgan</option>
-                        <option value="rent">Ijara</option>
-                    </select>
-                </div>
-            </div>
-            <div class="grid grid-cols-3 gap-4">
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Xonalar</label>
-                    <input type="number" name="rooms" id="editRooms" min="1" class="w-full px-3 py-2 border rounded-lg">
-                </div>
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Qavat</label>
-                    <input type="number" name="floor" id="editFloor" min="0" class="w-full px-3 py-2 border rounded-lg">
-                </div>
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Umumiy qavat</label>
-                    <input type="number" name="total_floors" id="editTotalFloors" min="0" class="w-full px-3 py-2 border rounded-lg">
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Maydon (m²)</label>
-                <input type="number" name="area" id="editArea" min="0" class="w-full px-3 py-2 border rounded-lg">
-            </div>
-            <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Izoh</label>
-                <textarea name="description" id="editDescription" rows="2" class="w-full px-3 py-2 border rounded-lg"></textarea>
-            </div>
-            <div class="flex justify-end gap-3">
-                <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">Bekor</button>
-                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Saqlash</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-function editProperty(id, title, address, price, status, rooms, floor, totalFloors, area, description, investorId) {
-    document.getElementById('editForm').action = '/properties/' + id;
-    document.getElementById('editTitle').value = title || '';
-    document.getElementById('editAddress').value = address || '';
-    document.getElementById('editPrice').value = price || 0;
-    document.getElementById('editStatus').value = status || 'free';
-    document.getElementById('editRooms').value = rooms || 0;
-    document.getElementById('editFloor').value = floor || 0;
-    document.getElementById('editTotalFloors').value = totalFloors || 0;
-    document.getElementById('editArea').value = area || 0;
-    document.getElementById('editDescription').value = description || '';
-    document.getElementById('editInvestor').value = investorId || '';
-    document.getElementById('editModal').classList.remove('hidden');
-}
-</script>
 @endsection

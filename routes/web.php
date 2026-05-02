@@ -23,7 +23,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');    Route::get('/mortgage-calculator', [DashboardController::class, 'mortgageCalculator'])->name('mortgage.calculator');    Route::post('/calculate-mortgage', [DashboardController::class, 'calculateMortgage'])->name('calculate.mortgage');
 
     Route::resource('investors', InvestorController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('properties', PropertyController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('properties', PropertyController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::resource('clients', ClientController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('sales', SaleController::class)->only(['index', 'store', 'destroy']);
 });
