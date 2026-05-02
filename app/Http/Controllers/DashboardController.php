@@ -78,6 +78,11 @@ class DashboardController extends Controller
         $totalDownPaymentUZS = $downPaymentFromPercentUZS + $investorAdditionUZS;
         $loanAmountUZS = $totalPropertyPriceUZS - $totalDownPaymentUZS;
 
+        $maxLoanLimit = 380000000; // 380 million UZS max bank loan
+        if ($loanAmountUZS > $maxLoanLimit) {
+            return back()->withErrors(['loan_amount' => 'Bank maksimal kredit limiti 380 million UZS. Kredit summasini kamaytiring.']);
+        }
+
         if ($loanAmountUZS <= 0) {
             return back()->withErrors(['loan_amount' => 'Kredit summasi musbat bo‘lishi kerak.']);
         }

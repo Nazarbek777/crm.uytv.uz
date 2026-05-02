@@ -120,6 +120,7 @@
                 <ul class="text-sm text-blue-800 space-y-2">
                     <li>• Boshlang‘ich to‘lov odatda 20-30% ni tashkil qiladi</li>
                     <li>• Investor qo'shimi boshlang‘ich to‘lovga qo'shiladi</li>
+                    <li>• Bank maksimal kredit limiti 380 million UZS</li>
                     <li>• Foiz stavkasi bankdan bankga farq qiladi</li>
                     <li>• Uzunroq muddat oylik to‘lovni kamaytiradi, lekin jami foizni oshiradi</li>
                     <li>• Hisob-kitob taxminiy va maslahat uchun mo‘ljallangan</li>
