@@ -106,7 +106,9 @@
                 <p class="text-xs text-slate-500">So'nggi 6 oy</p>
             </div>
         </div>
-        <canvas id="salesChart" height="110"></canvas>
+        <div style="position: relative; height: 260px;">
+            <canvas id="salesChart"></canvas>
+        </div>
     </div>
 
     <div class="rounded-2xl bg-white p-5 border border-slate-200 shadow-sm">
@@ -210,85 +212,96 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-    const months = @json($stats['chart_months']);
-    const salesData = @json($stats['chart_sales']);
-    const incomeData = @json($stats['chart_income']);
+    (function () {
+        const init = () => {
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js yuklanmadi');
+                return;
+            }
+            const months = @json($stats['chart_months']);
+            const salesData = (@json($stats['chart_sales'])).map(Number);
+            const incomeData = (@json($stats['chart_income'])).map(Number);
 
-    const ctx = document.getElementById('salesChart').getContext('2d');
-    const grad = ctx.createLinearGradient(0, 0, 0, 220);
-    grad.addColorStop(0, 'rgba(34, 211, 238, 0.35)');
-    grad.addColorStop(1, 'rgba(34, 211, 238, 0)');
+            const fmtUZS = v => {
+                if (v >= 1e9) return (v / 1e9).toFixed(1).replace(/\.0$/, '') + ' mlrd';
+                if (v >= 1e6) return (v / 1e6).toFixed(1).replace(/\.0$/, '') + ' mln';
+                if (v >= 1e3) return (v / 1e3).toFixed(0) + 'k';
+                return v.toLocaleString('ru-RU').replace(/,/g, ' ');
+            };
 
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: months,
-            datasets: [
-                {
-                    label: 'Daromad (UZS)',
-                    data: incomeData,
-                    borderColor: 'rgb(8, 145, 178)',
-                    backgroundColor: grad,
-                    tension: 0.35,
-                    fill: true,
-                    pointRadius: 3,
-                    pointBackgroundColor: 'rgb(8, 145, 178)',
-                    yAxisID: 'y',
-                },
-                {
-                    label: 'Savdolar soni',
-                    data: salesData,
-                    borderColor: 'rgb(249, 115, 22)',
-                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
-                    tension: 0.35,
-                    pointRadius: 3,
-                    pointBackgroundColor: 'rgb(249, 115, 22)',
-                    yAxisID: 'y1',
-                },
-            ],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                legend: { position: 'top', align: 'end', labels: { boxWidth: 10, font: { size: 11 } } },
-                tooltip: {
-                    callbacks: {
-                        label: (ctx) => {
-                            if (ctx.dataset.yAxisID === 'y') return ' Daromad: ' + Math.round(ctx.parsed.y).toLocaleString('ru-RU').replace(/,/g, ' ') + ' UZS';
-                            return ' Savdolar: ' + ctx.parsed.y;
+            const salesCanvas = document.getElementById('salesChart');
+            const hasSalesData = incomeData.some(v => v > 0);
+            if (salesCanvas && !hasSalesData) {
+                salesCanvas.parentElement.innerHTML = '<div class="flex items-center justify-center h-full text-sm text-slate-400"><div class="text-center"><i class="fas fa-chart-column text-3xl text-slate-300 mb-2 block"></i>Hozircha savdo ma\'lumotlari yo\'q</div></div>';
+            } else if (salesCanvas) {
+                new Chart(salesCanvas, {
+                    type: 'bar',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'Daromad',
+                            data: incomeData,
+                            backgroundColor: 'rgba(8, 145, 178, 0.85)',
+                            hoverBackgroundColor: 'rgb(8, 145, 178)',
+                            borderRadius: 8,
+                            borderSkipped: false,
+                            maxBarThickness: 48,
+                        }],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: (c) => ' ' + Math.round(c.parsed.y).toLocaleString('ru-RU').replace(/,/g, ' ') + ' UZS',
+                                    afterLabel: (c) => ' Savdolar: ' + salesData[c.dataIndex],
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                            y: {
+                                beginAtZero: true,
+                                ticks: { font: { size: 10 }, callback: v => fmtUZS(v) },
+                                grid: { color: 'rgba(148, 163, 184, 0.15)' }
+                            },
                         }
                     }
-                }
-            },
-            scales: {
-                x: { grid: { display: false }, ticks: { font: { size: 11 } } },
-                y: {
-                    type: 'linear', position: 'left',
-                    ticks: { font: { size: 10 }, callback: v => (v >= 1e6 ? (v/1e6).toFixed(0)+'M' : v.toLocaleString('ru-RU').replace(/,/g, ' ')) },
-                    grid: { color: 'rgba(148, 163, 184, 0.15)' }
-                },
-                y1: { type: 'linear', position: 'right', ticks: { font: { size: 10 }, precision: 0 }, grid: { display: false } }
+                });
             }
-        }
-    });
 
-    new Chart(document.getElementById('statusChart'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Bo\'sh', 'Sotilgan', 'Ijarada'],
-            datasets: [{
-                data: [{{ $stats['free'] }}, {{ $stats['sold'] }}, {{ $stats['rent'] }}],
-                backgroundColor: ['rgb(16, 185, 129)', 'rgb(59, 130, 246)', 'rgb(249, 115, 22)'],
-                borderWidth: 0,
-            }]
-        },
-        options: {
-            responsive: false,
-            plugins: { legend: { display: false } },
-            cutout: '70%',
+            const statusCanvas = document.getElementById('statusChart');
+            const statusData = [{{ $stats['free'] }}, {{ $stats['sold'] }}, {{ $stats['rent'] }}];
+            const hasStatusData = statusData.some(v => v > 0);
+            if (statusCanvas && !hasStatusData) {
+                statusCanvas.parentElement.innerHTML = '<div class="text-sm text-slate-400 text-center py-8"><i class="fas fa-house text-3xl text-slate-300 mb-2 block"></i>Uy yo\'q</div>';
+            } else if (statusCanvas) {
+                new Chart(statusCanvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Bo\'sh', 'Sotilgan', 'Ijarada'],
+                        datasets: [{
+                            data: statusData,
+                            backgroundColor: ['rgb(16, 185, 129)', 'rgb(59, 130, 246)', 'rgb(249, 115, 22)'],
+                            borderWidth: 0,
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        plugins: { legend: { display: false } },
+                        cutout: '70%',
+                    }
+                });
+            }
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
         }
-    });
+    })();
 </script>
 @endsection
