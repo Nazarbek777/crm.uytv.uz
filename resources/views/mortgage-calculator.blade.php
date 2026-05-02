@@ -20,9 +20,21 @@
             <form action="{{ route('calculate.mortgage') }}" method="POST" class="space-y-6">
                 @csrf
                 <div>
-                    <label for="property_price" class="block text-sm font-medium text-slate-700 mb-2">Uy narxi (UZS)</label>
-                    <input type="number" id="property_price" name="property_price" value="{{ old('property_price', $avgPrice) }}" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:border-slate-500 focus:outline-none" placeholder="Masalan: 500000000" required>
+                    <label for="property_price" class="block text-sm font-medium text-slate-700 mb-2">Uy narxi</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="property_price" name="property_price" value="{{ old('property_price', $avgPrice) }}" class="flex-1 rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:border-slate-500 focus:outline-none" placeholder="Masalan: 500000000" required>
+                        <select name="currency" id="currency" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:border-slate-500 focus:outline-none">
+                            <option value="UZS" {{ old('currency', 'UZS') == 'UZS' ? 'selected' : '' }}>UZS</option>
+                            <option value="USD" {{ old('currency', 'UZS') == 'USD' ? 'selected' : '' }}>USD</option>
+                        </select>
+                    </div>
                     @error('property_price') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
+                    @error('currency') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="investor_addition" class="block text-sm font-medium text-slate-700 mb-2">Investor qo'shimi (ixtiyoriy)</label>
+                    <input type="number" id="investor_addition" name="investor_addition" value="{{ old('investor_addition', 0) }}" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm focus:border-slate-500 focus:outline-none" placeholder="Masalan: 5000000">
+                    @error('investor_addition') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label for="down_payment_percent" class="block text-sm font-medium text-slate-700 mb-2">Boshlang‘ich to‘lov (%)</label>
@@ -49,37 +61,49 @@
             @if(session('mortgage_result'))
                 <div class="rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-2xl">
                     <h3 class="text-xl font-semibold mb-6">Hisoblash natijasi</h3>
-                    <div class="grid gap-4 sm:grid-cols-2">
+                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         <div class="rounded-3xl bg-slate-900/90 p-4 border border-slate-700">
                             <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Uy narxi</p>
-                            <p class="mt-2 text-2xl font-semibold">{{ number_format(session('mortgage_result')['property_price'], 0, ',', ' ') }} UZS</p>
+                            <p class="mt-2 text-2xl font-semibold">{{ number_format(session('mortgage_result')['property_price'], 0, ',', ' ') }} {{ session('mortgage_result')['currency'] }}</p>
+                        </div>
+                        <div class="rounded-3xl bg-slate-900/90 p-4 border border-slate-700">
+                            <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Investor qo'shimi</p>
+                            <p class="mt-2 text-2xl font-semibold">{{ number_format(session('mortgage_result')['investor_addition'], 0, ',', ' ') }} {{ session('mortgage_result')['currency'] }}</p>
+                        </div>
+                        <div class="rounded-3xl bg-slate-900/90 p-4 border border-slate-700">
+                            <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Jami uy narxi</p>
+                            <p class="mt-2 text-2xl font-semibold">{{ number_format(session('mortgage_result')['total_property_price'], 0, ',', ' ') }} {{ session('mortgage_result')['currency'] }}</p>
                         </div>
                         <div class="rounded-3xl bg-slate-900/90 p-4 border border-slate-700">
                             <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Boshlang‘ich to‘lov</p>
-                            <p class="mt-2 text-2xl font-semibold">{{ number_format(session('mortgage_result')['down_payment'], 0, ',', ' ') }} UZS</p>
-                            <p class="text-xs text-slate-400">{{ session('mortgage_result')['down_payment_percent'] }}%</p>
+                            <p class="mt-2 text-2xl font-semibold">{{ number_format(session('mortgage_result')['down_payment'], 0, ',', ' ') }} {{ session('mortgage_result')['currency'] }}</p>
+                            <p class="text-xs text-slate-400">{{ session('mortgage_result')['down_payment_percent'] }}% + investor</p>
                         </div>
                         <div class="rounded-3xl bg-slate-900/90 p-4 border border-slate-700">
                             <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Kredit summasi</p>
-                            <p class="mt-2 text-2xl font-semibold">{{ number_format(session('mortgage_result')['loan_amount'], 0, ',', ' ') }} UZS</p>
+                            <p class="mt-2 text-2xl font-semibold">{{ number_format(session('mortgage_result')['loan_amount'], 0, ',', ' ') }} {{ session('mortgage_result')['currency'] }}</p>
                         </div>
                         <div class="rounded-3xl bg-slate-900/90 p-4 border border-slate-700">
                             <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Oylik to‘lov</p>
-                            <p class="mt-2 text-2xl font-semibold">{{ number_format(session('mortgage_result')['monthly_payment'], 0, ',', ' ') }} UZS</p>
+                            <p class="mt-2 text-2xl font-semibold">{{ number_format(session('mortgage_result')['monthly_payment'], 0, ',', ' ') }} {{ session('mortgage_result')['currency'] }}</p>
                         </div>
                         <div class="rounded-3xl bg-slate-900/90 p-4 border border-slate-700">
                             <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Jami to‘lov</p>
-                            <p class="mt-2 text-2xl font-semibold">{{ number_format(session('mortgage_result')['total_payment'], 0, ',', ' ') }} UZS</p>
+                            <p class="mt-2 text-2xl font-semibold">{{ number_format(session('mortgage_result')['total_payment'], 0, ',', ' ') }} {{ session('mortgage_result')['currency'] }}</p>
                         </div>
                         <div class="rounded-3xl bg-slate-900/90 p-4 border border-slate-700">
                             <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Jami foiz</p>
-                            <p class="mt-2 text-2xl font-semibold">{{ number_format(session('mortgage_result')['total_interest'], 0, ',', ' ') }} UZS</p>
+                            <p class="mt-2 text-2xl font-semibold">{{ number_format(session('mortgage_result')['total_interest'], 0, ',', ' ') }} {{ session('mortgage_result')['currency'] }}</p>
                         </div>
                     </div>
                     <div class="mt-6 p-4 rounded-3xl bg-slate-950/80 border border-slate-700">
                         <p class="text-sm text-slate-300">
                             <strong>Muddat:</strong> {{ session('mortgage_result')['term_years'] }} yil<br>
-                            <strong>Foiz stavkasi:</strong> {{ session('mortgage_result')['interest_rate'] }}% yillik
+                            <strong>Foiz stavkasi:</strong> {{ session('mortgage_result')['interest_rate'] }}% yillik<br>
+                            <strong>Valyuta:</strong> {{ session('mortgage_result')['currency'] }}
+                            @if(session('mortgage_result')['currency'] === 'USD')
+                                (1 USD = {{ number_format(session('mortgage_result')['exchange_rate'], 0, ',', ' ') }} UZS)
+                            @endif
                         </p>
                     </div>
                 </div>
@@ -95,9 +119,11 @@
                 <h4 class="text-lg font-semibold text-blue-900 mb-3">Maslahat</h4>
                 <ul class="text-sm text-blue-800 space-y-2">
                     <li>• Boshlang‘ich to‘lov odatda 20-30% ni tashkil qiladi</li>
+                    <li>• Investor qo'shimi boshlang‘ich to‘lovga qo'shiladi</li>
                     <li>• Foiz stavkasi bankdan bankga farq qiladi</li>
                     <li>• Uzunroq muddat oylik to‘lovni kamaytiradi, lekin jami foizni oshiradi</li>
                     <li>• Hisob-kitob taxminiy va maslahat uchun mo‘ljallangan</li>
+                    <li>• Valyuta kursi: 1 USD ≈ 12,600 UZS (taxminiy)</li>
                 </ul>
             </div>
         </div>

@@ -57,17 +57,28 @@ class DashboardController extends Controller
     {
         $request->validate([
             'property_price' => 'required|numeric|min:0',
+            'investor_addition' => 'nullable|numeric|min:0',
             'down_payment_percent' => 'required|numeric|min:0|max:100',
             'interest_rate' => 'required|numeric|min:0|max:100',
             'term_years' => 'required|integer|min:1|max:50',
+            'currency' => 'required|in:UZS,USD',
         ]);
 
-        $propertyPrice = $request->property_price;
-        $downPaymentPercent = $request->down_payment_percent;
-        $downPayment = $propertyPrice * ($downPaymentPercent / 100);
-        $loanAmount = $propertyPrice - $downPayment;
+        $exchangeRate = 12600; // 1 USD = 12600 UZS
+        $currency = $request->currency;
 
-        if ($loanAmount <= 0) {
+        // Convert to UZS for calculation
+        $propertyPriceUZS = $currency === 'USD' ? $request->property_price * $exchangeRate : $request->property_price;
+        $investorAdditionUZS = $currency === 'USD' ? ($request->investor_addition ?? 0) * $exchangeRate : ($request->investor_addition ?? 0);
+
+        $totalPropertyPriceUZS = $propertyPriceUZS + $investorAdditionUZS;
+
+        $downPaymentPercent = $request->down_payment_percent;
+        $downPaymentFromPercentUZS = $totalPropertyPriceUZS * ($downPaymentPercent / 100);
+        $totalDownPaymentUZS = $downPaymentFromPercentUZS + $investorAdditionUZS;
+        $loanAmountUZS = $totalPropertyPriceUZS - $totalDownPaymentUZS;
+
+        if ($loanAmountUZS <= 0) {
             return back()->withErrors(['loan_amount' => 'Kredit summasi musbat bo‘lishi kerak.']);
         }
 
@@ -75,21 +86,28 @@ class DashboardController extends Controller
         $monthlyRate = $annualRate / 12;
         $termMonths = $request->term_years * 12;
 
-        $monthlyPayment = $loanAmount * ($monthlyRate * pow(1 + $monthlyRate, $termMonths)) / (pow(1 + $monthlyRate, $termMonths) - 1);
-        $totalPayment = $monthlyPayment * $termMonths;
-        $totalInterest = $totalPayment - $loanAmount;
+        $monthlyPaymentUZS = $loanAmountUZS * ($monthlyRate * pow(1 + $monthlyRate, $termMonths)) / (pow(1 + $monthlyRate, $termMonths) - 1);
+        $totalPaymentUZS = $monthlyPaymentUZS * $termMonths;
+        $totalInterestUZS = $totalPaymentUZS - $loanAmountUZS;
+
+        // Convert back to display currency
+        $conversionRate = $currency === 'USD' ? $exchangeRate : 1;
 
         return back()->with([
             'mortgage_result' => [
-                'property_price' => $propertyPrice,
-                'down_payment' => round($downPayment),
-                'loan_amount' => round($loanAmount),
-                'monthly_payment' => round($monthlyPayment),
-                'total_payment' => round($totalPayment),
-                'total_interest' => round($totalInterest),
+                'property_price' => round($propertyPriceUZS / $conversionRate),
+                'investor_addition' => round($investorAdditionUZS / $conversionRate),
+                'total_property_price' => round($totalPropertyPriceUZS / $conversionRate),
+                'down_payment' => round($totalDownPaymentUZS / $conversionRate),
+                'loan_amount' => round($loanAmountUZS / $conversionRate),
+                'monthly_payment' => round($monthlyPaymentUZS / $conversionRate),
+                'total_payment' => round($totalPaymentUZS / $conversionRate),
+                'total_interest' => round($totalInterestUZS / $conversionRate),
                 'interest_rate' => $request->interest_rate,
                 'term_years' => $request->term_years,
                 'down_payment_percent' => $downPaymentPercent,
+                'currency' => $currency,
+                'exchange_rate' => $exchangeRate,
             ]
         ]);
     }
